@@ -1,0 +1,35 @@
+// vole padni
+// nazdar
+Item := theItem;
+IF rec.FINDFIRST  THEN REPEAT
+    k += 1;
+UNTIL rec.NEXT = 0;
+
+a := 5;
+C := 7;
+
+IF locRec.FINDFIRST THEN BEGIN
+    REPEAT
+        A += 2 ;
+    UNTIL loc.Rec.NEXT = O
+END;
+
+
+#find_pattern = re.compile(r"(FINDFIRST\s+THEN\s*REPEAT)", re.MULTILINE | re.VERBOSE)
+""" find_pattern = re.compile(r"(FINDFIRST\s+THEN\s+BEGIN\s+REPEAT)", re.DOTALL|re.MULTILINE)
+directory = ("navsrc")
+c = 0
+for filename in os.listdir(directory):
+    ifile = open(os.path.join(directory,filename), "r", encoding="cp850")
+    itext = ifile.read()
+    ifile.close
+    i =0
+    
+    for match in find_pattern.finditer(itext):
+        if i == 0:
+            print(filename)
+            i = 1
+        c += 1
+ """
+
+
