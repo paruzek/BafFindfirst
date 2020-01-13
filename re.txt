@@ -1,0 +1,3983 @@
+navsrctest/TAB36.txt
+ t_DebBem.FINDFIRST THEN BEGIN
+                                                                    REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                      BEGIN
+                                                                       REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                        BEGIN
+                                                                         REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                  BEGIN
+                                                                    REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                  BEGIN
+                                                                    REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                  BEGIN
+                                                                    REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                  BEGIN
+                                                                    REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                  BEGIN
+                                                                    REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                  BEGIN
+                                                                    REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                  BEGIN
+                                                                    REPEAT
+ t_VerkZ.FINDFIRST THEN BEGIN
+                                                                  REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                BEGIN
+                                                                  REPEAT
+ t_Dispopool.FINDFIRST THEN
+                                                                BEGIN
+                                                                  REPEAT
+ t_VerkZ.FINDFIRST THEN BEGIN
+                                                                REPEAT
+ SalesLine.FINDFIRST THEN BEGIN
+            REPEAT
+ ItemChargeAssgntSales.FINDFIRST THEN BEGIN
+              REPEAT
+ TempItemChargeAssgntSales.FINDFIRST THEN BEGIN
+                    REPEAT
+ TempItemChargeAssgntSales.FINDFIRST THEN BEGIN
+                  REPEAT
+ LCL_RE_Tourzeilen.FINDFIRST THEN BEGIN
+        REPEAT
+ SalesLine.FINDFIRST THEN BEGIN
+        REPEAT
+ LCL_RE_Dispositionspool.FINDFIRST THEN BEGIN
+        REPEAT
+ lrecPurchOrderComment.FINDFIRST THEN BEGIN
+             REPEAT
+ lrecPurchOrderComment.FINDFIRST THEN BEGIN
+             REPEAT
+ LO_RE_SalesLine.FINDFIRST THEN
+                                                                  REPEAT
+ LO_RE_Salesline.FINDFIRST THEN
+                                                                REPEAT
+ locTbSalesLine.FINDFIRST THEN
+                                                                    REPEAT
+ locTbSalesLine.FINDFIRST THEN
+                                                                         REPEAT
+ LCL_RE_SalesLine.FINDFIRST THEN
+                                                                    REPEAT
+ SalesLine.FINDFIRST THEN
+                                                                        REPEAT
+ ServDocReg.FINDFIRST THEN
+                REPEAT
+ TempServDocReg.FINDFIRST THEN
+                REPEAT
+ SalesLineTmp.FINDFIRST THEN
+              REPEAT
+ SalesLine.FINDFIRST THEN
+          REPEAT
+ SalesLine.FINDFIRST THEN
+        REPEAT
+ ReservEntry.FINDFIRST THEN
+          REPEAT
+ TempReservEntry.FINDFIRST THEN
+          REPEAT
+ ReqLine.FINDFIRST THEN
+          REPEAT
+ TempReqLine.FINDFIRST THEN
+          REPEAT
+ lAdvLink.FINDFIRST THEN
+        REPEAT
+ SalesLine.FINDFIRST THEN
+        REPEAT
+ locTbVendorTemp.FINDFIRST THEN
+        REPEAT
+ SalesLine.FINDFIRST THEN
+           REPEAT
+ SalesLine.FINDFIRST THEN
+        REPEAT
+ locTbVendorTemp.FINDFIRST THEN
+        REPEAT
+ SalesLine.FINDFIRST THEN
+           REPEAT
+ SalesLine.FINDFIRST THEN
+          REPEAT
+ SalesLine.FINDFIRST THEN
+          REPEAT
+ t_VerkZ.FINDFIRST THEN
+                                                                  //"Shipment Date" := t_VerkZ."Shipment Date";
+                                                                  "Shipment Date" := 0D;    // AVIA-FSP,060204
+                                                                }
+                                                                // ENDE-OR-020304
+
+                                                                //* Prob: Auftrag Nacherfassung: Preis wird doch noch mal neu gerechnet ...
+                                                                //* auch, wenn VK manuell gepflegt wurde ...
+
+                                                                // START-OR-201102
+                                                                // Frachtermittlung deaktiviert
+                                                                {
+                                                                //* Frachtsatz ermitteln ...
+                                                                IF "Order Type" IN["Order Type"::Kraftstoff,"Order Type"::Heizöl] THEN BEGIN
+                                                                  IF Vermittler = '' THEN BEGIN  //Nur für Aufträge, die nicht über Sammelbestellungen kommen ...
+                                                                    IF "Order created" THEN
+                                                                      "Freight Rate (LCY)" := c_FrachtPreis.FrachtAktualisieren(Rec,0)
+                                                                    ELSE
+                                                                      "Freight Rate (LCY)" := 0;
+                                                                    MODIFY;
+
+                                                                    IF SalesLinesExist THEN BEGIN
+                                                                      //SalesLine.LOCKTABLE;
+
+                                                                      SalesLine.RESET;
+                                                                      SalesLine.SETRANGE("Document Type","Document Type");
+                                                                      SalesLine.SETRANGE("Document No.","No.");
+                                                                      IF SalesLine.FINDFIRST THEN
+                                                                        REPEAT
+                                                                          IF (SalesLine.Type = SalesLine.Type::Item) AND (SalesLine.Artikelart = SalesLine.Artikelart::Flüssig) THEN BEGIN
+                                                                            IF (SalesLine."Freight Rate (LCY)" = 0) OR ("Freight Rate (LCY)" <> xRec."Freight Rate (LCY)") THEN BEGIN
+                                                                              SalesLine."Freight Rate (LCY)" := "Freight Rate (LCY)";
+                                                                              IF "Order created" THEN
+                                                                                BEGIN
+                                                                                SalesLine.VALIDATE(SalesLine."Margin (LCY)",SalesLine."Margin (LCY)" - "Freight Rate (LCY)");
+                                                                                SalesLine.VALIDATE(SalesLine."Freight Rate (LCY)");
+                                                                                END
+                                                                              ELSE
+                                                                                SalesLine.MineralölBetragAktualisieren;
+                                                                              SalesLine.MODIFY;
+                                                                            END;
+                                                                          END;
+                                                                          SalesLine.MODIFY(TRUE);
+                                                                      UNTIL SalesLine.NEXT = 0;
+                                                                    END;
+                                                                  END;  //Vermittler <> ''
+                                                                END;
+                                                                }
+                                                                // ENDE-OR-201102
+
+
+
+                                                                // Abprüfen Amortisationszuschlag
+                                                                IF "Amortisationszuschlag berechn." THEN BEGIN
+                                                                  RE_KuEinr.GET;
+                                                                  SalesLine.RESET;
+                                                                  SalesLine.SETRANGE(SalesLine."Document Type","Document Type");
+                                                                  SalesLine.SETRANGE(SalesLine."Document No.","No.");
+                                                                  SalesLine.SETRANGE(SalesLine."No.",RE_KuEinr."Art.-Nr.-Amort.-Zuschlag");
+                                                                  IF NOT SalesLine.FINDFIRST THEN
+                                                                    ERROR(Text60001);
+                                                                END;
+
+
+                                                                //START - WG - 02.04.2010 - MP - rem code
+                                                                //COMMIT;
+                                                                //STOP - WG - 02.04.2010 - MP - rem code
+                                                              END;
+
+                                                   CaptionML=[ENU=Order created;
+                                                              DEA=Auftrag erfasst] }
+    { 5010022;;Order created at (Date);Date       ;CaptionML=[ENU=Order created at (Date);
+                                                              DEA=Auftrag erfasst am] }
+    { 5010023;;Order created at (Time);Time       ;CaptionML=[ENU=Order created at (Time);
+                                                              DEA=Auftrag erfasst um] }
+    { 5010024;;Order created by    ;Code20        ;TableRelation="User Setup"."User ID";
+                                                   CaptionML=[ENU=Order created by;
+                                                              DEA=Auftrag erfasst von];
+                                                   SQL Data Type=Variant }
+    { 5010025;;Sales Price is OK   ;Boolean       ;InitValue=Yes;
+                                                   CaptionML=[ENU=Sales Price is OK;
+                                                              DEA=VK-Preis OK] }
+    { 5010026;;Document Entered    ;Boolean       ;CaptionML=[ENU=Document Entered;
+                                                              DEA=Beleg nacherfasst] }
+    { 5010027;;Gebietscode         ;Code10        ;CaptionML=CSY=Kód oblasti }
+    { 5010028;;Name 3              ;Text1         ;CaptionML=[ENU=Name 3;
+                                                              DEA=Name 3];
+                                                   Description=WG length 50->1 }
+    { 5010029;;Self-Collector      ;Boolean       ;CaptionML=[ENU=Self-Collector;
+                                                              DEA=Selbstabholer];
+                                                   Description=WZ-Min2.01 }
+    { 5010030;;Current Order Amount (LCY);Decimal ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Sales Line"."Outstanding Amount (LCY)" WHERE (Document Type=FIELD(Document Type),
+                                                                                                                  Document No.=FIELD(No.)));
+                                                   OnValidate=BEGIN
+                                                                KredLimPrüfen;
+                                                              END;
+
+                                                   CaptionML=[ENU=Current Order Amount (LCY);
+                                                              DEA=Akt. Auftragswert (MW)];
+                                                   Description=calc.;
+                                                   Editable=No }
+    { 5010031;;Centralized Order No.;Code20       ;TableRelation=Sammelbestellkopf;
+                                                   CaptionML=[ENU=Centralized Order No.;
+                                                              DEA=Sammelbestellnr.];
+                                                   SQL Data Type=Variant;
+                                                   Editable=No }
+    { 5010032;;OptiTool Serial No. ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("OptiTool Auftragsdispoproto"."Entry No." WHERE (Order No.=FIELD(No.)));
+                                                   CaptionML=[ENU=OptiTool Serial No.;
+                                                              DEA=optiTool LfdNr.] }
+    { 5010033;;Number of Lines     ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Sales Line" WHERE (Document Type=FIELD(Document Type),
+                                                                                         Document No.=FIELD(No.),
+                                                                                         Type=CONST(Item)));
+                                                   CaptionML=[ENU=Number of Lines;
+                                                              DEA=Anz. Positionen];
+                                                   Editable=No }
+    { 5010034;;Latest Shipping Date;Date          ;CaptionML=[CSY=Dodat nejpozdÏji do;
+                                                              ENU=Latest Shipping Date;
+                                                              DEA=Spätestes Lieferdatum] }
+    { 5010035;;Agent               ;Code20        ;TableRelation=Customer;
+                                                   CaptionML=[ENU=Agent;
+                                                              DEA=Vermittler];
+                                                   SQL Data Type=Variant }
+    { 5010036;;Transfered to OptiTool;Boolean     ;OnValidate=BEGIN
+                                                                IF "Transfered to OptiTool" THEN BEGIN
+                                                                  FNK_VKZ_LfdNrOptitool_Aktual();
+                                                                  ÜbergabeOptiTool();
+                                                                  END
+                                                                ELSE
+                                                                  OptiToolStorno();
+                                                              END;
+
+                                                   CaptionML=[ENU=Transfered to OptiTool;
+                                                              DEA=An OptiTool übergeben] }
+    { 5010037;;Tour no.            ;Code20        ;TableRelation="Tour Header";
+                                                   OnValidate=BEGIN
+                                                                // Start MH-220803: Option: Pflege Tournummer auch aus VkKopf:
+                                                                // t_Tourenzeilen."ZuordnungVkAuftrag>Tour" ('VAL', Rec, xRec);
+                                                                // Ende MH-220803
+                                                              END;
+
+                                                   CaptionML=ENU=Tour no.;
+                                                   Description=nonEditable;
+                                                   Editable=No }
+    { 5010038;;Contact Customer by Booker;Boolean ;OnValidate=BEGIN
+                                                                t_Dispopool.RESET;
+                                                                t_Dispopool.SETRANGE(t_Dispopool.Typ, t_Dispopool.Typ::Verkaufsauftrag);
+                                                                t_Dispopool.SETRANGE(t_Dispopool."No.", "No.");
+                                                                IF t_Dispopool.FINDFIRST THEN
+                                                                BEGIN
+                                                                  REPEAT                       //AVIA-RK-180504
+                                                                    t_Dispopool."Tel. Dispatch Boat" := "Contact Customer by Booker";
+                                                                    t_Dispopool.MODIFY;
+                                                                  UNTIL t_Dispopool.NEXT = 0;  //AVIA-RK-180504
+                                                                END;
+
+                                                                // START-OR-261103
+                                                                t_TZ.RESET;
+                                                                t_TZ.SETCURRENTKEY(t_TZ."No.", t_TZ.Type, t_TZ."Delivery Note Type");
+                                                                t_TZ.SETRANGE(t_TZ."No.", "No.");
+                                                                t_TZ.SETRANGE(t_TZ.Type, t_TZ.Type::Lieferschein);
+                                                                t_TZ.SETRANGE(t_TZ."Delivery Note Type", t_TZ."Delivery Note Type"::Verkaufsauftrag);
+                                                                IF t_TZ.FINDFIRST THEN
+                                                                BEGIN
+                                                                t_TZ."telef. Aviso" := "Contact Customer by Booker";
+                                                                t_TZ.MODIFY;
+                                                                END;
+                                                                // ENDE-OR-261103
+                                                              END;
+
+                                                   CaptionML=ENU=Contact Customer by Booker }
+    { 5010039;;Contact Customer by Driver;Boolean ;CaptionML=ENU=Contact Customer by Driver }
+    { 5010040;;Customer Asked for Price;Boolean   ;CaptionML=ENU=Customer Asked for Price }
+    { 5010041;;Print Data on Acc. Statement;Boolean;
+                                                   CaptionML=ENU=Print Data on Account Statement;
+                                                   Description=AVIAmat }
+    { 5010042;;Invoice Supplement  ;Option        ;CaptionML=ENU=Invoice Supplement;
+                                                   OptionCaptionML=[CSY=" ,Faktura,Faktura+Div,Div";
+                                                                    DEA=" ,LS,LS+Div,Div"];
+                                                   OptionString=[ ,LS,LS+Div,Div];
+                                                   Description=AVIAmat }
+    { 5010043;;Home Station        ;Code20        ;CaptionML=ENU=Home Station }
+    { 5010044;;Do Not Delete Request;Boolean      ;CaptionML=ENU=Do Not Delete Request;
+                                                   Description=Hilfsfeld }
+    { 5010045;;Exported at (Date)  ;Date          ;CaptionML=ENU=Exported at (Date);
+                                                   Editable=No }
+    { 5010046;;Exported at (Time)  ;Time          ;CaptionML=ENU=Exported at (Time);
+                                                   Editable=No }
+    { 5010047;No;Exported from     ;Code20        ;CaptionML=ENU=Exported from;
+                                                   Editable=No }
+    { 5010048;;Created at (date)   ;Date          ;CaptionML=ENU=Created at (date);
+                                                   Editable=No }
+    { 5010049;;Created at (time)   ;Time          ;CaptionML=ENU=Created at (time);
+                                                   Editable=No }
+    { 5010050;;Truck Fleet No.     ;Code10        ;CaptionML=ENU=Truck Fleet No. }
+    { 5010051;;Created from        ;Code20        ;CaptionML=ENU=Created from;
+                                                   Editable=No }
+    { 5010052;;Original Vendor     ;Code20        ;TableRelation=Vendor;
+                                                   CaptionML=ENU=Original Vendor }
+    { 5010053;;Remark (order)      ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Exist("Sales Comment Line" WHERE (Document Type=FIELD(Document Type),
+                                                                                                 No.=FIELD(No.)));
+                                                   CaptionML=ENU=Remark (order);
+                                                   Editable=No }
+    { 5010054;;Printing Remarks (delivery);Boolean;FieldClass=FlowField;
+                                                   CalcFormula=Exist(Auftragsbemerkungen WHERE (Document Type=FIELD(Document Type),
+                                                                                                No.=FIELD(No.),
+                                                                                                Print to=FILTER(Lieferschein|Lieferschein + Rechnung)));
+                                                   CaptionML=ENU=Printing Remarks (delivery);
+                                                   Editable=No }
+    { 5010055;;Printing Remarks (invoice);Boolean ;FieldClass=FlowField;
+                                                   CalcFormula=Exist(Auftragsbemerkungen WHERE (Document Type=FIELD(Document Type),
+                                                                                                No.=FIELD(No.),
+                                                                                                Print to=FILTER(Rechnung|Lieferschein + Rechnung)));
+                                                   CaptionML=ENU=Printing Remarks (invoice);
+                                                   Editable=No }
+    { 5010056;;Special Delivery Time;Boolean      ;OnValidate=BEGIN
+                                                                t_Dispopool.RESET;
+                                                                t_Dispopool.SETRANGE(t_Dispopool.Typ, t_Dispopool.Typ::Verkaufsauftrag);
+                                                                t_Dispopool.SETRANGE(t_Dispopool."No.", "No.");
+                                                                IF t_Dispopool.FINDFIRST THEN
+                                                                BEGIN
+                                                                  REPEAT                      //AVIA-RK-180504
+                                                                    t_Dispopool."Special Delivery Time" := "Special Delivery Time";
+                                                                    t_Dispopool.MODIFY;
+                                                                  UNTIL t_Dispopool.NEXT = 0; //AVIA-RK-180504
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=ENU=Special Delivery Time }
+    { 5010057;;Lines Refreshed     ;Boolean       ;CaptionML=ENU=Lines Refreshed;
+                                                   Editable=No }
+    { 5010058;;No. of Delivery Notes Printed1;Integer;
+                                                   CaptionML=ENU=Number of Delivery Notes Printed }
+    { 5010059;;Tour Filter         ;Code10        ;FieldClass=FlowFilter;
+                                                   TableRelation="Tour Header".No.;
+                                                   CaptionML=ENU=Tour Filter }
+    { 5010060;;Manualy freight Rate;Boolean       ;CaptionML=CSY=Manuální splátka dopravného }
+    { 5010061;;Not in Disposition  ;Boolean       ;OnValidate=BEGIN
+                                                                t_VerkZ.RESET;
+                                                                t_VerkZ.SETRANGE(t_VerkZ."Document Type","Document Type");
+                                                                t_VerkZ.SETRANGE(t_VerkZ."Document No.","No.");
+                                                                t_VerkZ.SETRANGE(t_VerkZ.Type,t_VerkZ.Type::Item);
+                                                                IF t_VerkZ.FINDFIRST THEN BEGIN
+                                                                REPEAT
+                                                                 IF "Not in Disposition" THEN
+                                                                   t_VerkZ."Dispopool verwalten"(6)
+                                                                 ELSE
+                                                                   t_VerkZ."Dispopool verwalten"(5);
+                                                                 t_VerkZ.MODIFY;
+                                                                UNTIL t_VerkZ.NEXT = 0;
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=ENU=Not in Disposition }
+    { 5010101;;Print SalesPr. on DeliveryNote;Boolean;
+                                                   CaptionML=[ENU=Print SalesPrice on DeliveryNote;
+                                                              DEA=Preis auf LS drucken] }
+    { 5010200;;Freistellungsnummer ;Code10        ;CaptionML=CSY=UvolnÏné ƒíslo }
+    { 5010201;;Frachtsatz (Manuell);Decimal       ;OnValidate=BEGIN
+                                                                IF "Frachtsatz (Manuell)" <> xRec."Frachtsatz (Manuell)" THEN BEGIN
+                                                                  "Lines Refreshed" := FALSE;
+                                                                  MODIFY;
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=CSY=Sazba dopravného (Manuální);
+                                                   Description=NF }
+    { 5010202;;Verteilungsschlussel;Option        ;CaptionML=CSY=Klíƒ pro rozdÏlení;
+                                                   OptionCaptionML=CSY=Mnoºství,¼ástka,RovnomÏrnÏ;
+                                                   OptionString=nach Menge,nach Betrag,Zu gleichen Teilen }
+    { 5010203;;Abnahmevertrag auf OMR-Basis;Boolean;
+                                                   CaptionML=CSY=P²ejímací úmluva na OMR-základ }
+    { 5010204;;Zollpos. Nr. andrucken;Boolean     ;CaptionML=CSY=¼íslo celní poloºky stiskn. }
+    { 5010205;;Andruck der Gewichte;Boolean       ;CaptionML=CSY=P²íznak dàleºitosti }
+    { 5010206;;Anzahl gedruckter Proforma;Integer ;CaptionML=CSY=Mnoºství formálního p²ítlaku }
+    { 5010210;;IC Company          ;Text30        ;TableRelation=Company;
+                                                   CaptionML=ENU=IC Company;
+                                                   Description=IC°;
+                                                   Editable=No }
+    { 5010211;;IC Document Type    ;Option        ;CaptionML=ENU=IC Document Type;
+                                                   OptionCaptionML=ENU=Quote,Order,Invoice,Credit Memo,Blanket Order,Return Order;
+                                                   OptionString=Quote,Order,Invoice,Credit Memo,Blanket Order,Return Order;
+                                                   Description=IC°;
+                                                   Editable=No }
+    { 5010212;;IC Document No.     ;Code20        ;CaptionML=ENU=IC Document No.;
+                                                   Description=IC°;
+                                                   Editable=No }
+    { 5010213;;Rabattinfo          ;Text1         ;CaptionML=CSY=Informace o rabatu;
+                                                   Description=RSM° verkleinert auf 50 Zeichen von 250,DPH11 shortened to 1 char }
+    { 5010214;;Neuer Rabattsatz    ;Decimal       ;CaptionML=CSY=Nová sazba rabatu;
+                                                   Description=RSM° }
+    { 5010215;;Selbstabholerrabatt ;Decimal       ;CaptionML=CSY=Samo vyvozený rabat;
+                                                   Description=RSM° }
+    { 5010216;;Kundenrabattgruppe  ;Code10        ;TableRelation=Table5096778.Field1;
+                                                   CaptionML=CSY=Skupina rabatu zákazníka;
+                                                   Description=WB1° }
+    { 99008500;;Date Received      ;Date          ;CaptionML=[CSY=Datum p²ijetí;
+                                                              ENU=Date Received] }
+    { 99008501;;Time Received      ;Time          ;CaptionML=[CSY=¼as p²ijetí;
+                                                              ENU=Time Received] }
+    { 99008502;;BizTalk Request for Sales Qte.;Boolean;
+                                                   CaptionML=[CSY=BizTalk poº.na nabídku;
+                                                              ENU=BizTalk Request for Sales Qte.] }
+    { 99008503;;BizTalk Sales Order;Boolean       ;CaptionML=[CSY=BizTalk prod.objednávka;
+                                                              ENU=BizTalk Sales Order] }
+    { 99008509;;Date Sent          ;Date          ;CaptionML=[CSY=Odesláno dne;
+                                                              ENU=Date Sent] }
+    { 99008510;;Time Sent          ;Time          ;CaptionML=[CSY=¼as odeslání;
+                                                              ENU=Time Sent] }
+    { 99008513;;BizTalk Sales Quote;Boolean       ;CaptionML=[CSY=BizTalk nabídka;
+                                                              ENU=BizTalk Sales Quote] }
+    { 99008514;;BizTalk Sales Order Cnfmn.;Boolean;CaptionML=[CSY=BizTalk potvrzení prod.obj.;
+                                                              ENU=BizTalk Sales Order Cnfmn.] }
+    { 99008518;;Customer Quote No. ;Code20        ;CaptionML=[CSY=¼.poptávky zákazníka;
+                                                              ENU=Customer Quote No.] }
+    { 99008519;;Customer Order No. ;Code20        ;CaptionML=[CSY=¼.objednávky zákazníka;
+                                                              ENU=Customer Order No.] }
+    { 99008521;;BizTalk Document Sent;Boolean     ;CaptionML=[CSY=Odeslán BizTalk doklad;
+                                                              ENU=BizTalk Document Sent] }
+  }
+  KEYS
+  {
+    {    ;Document Type,No.                       ;Clustered=Yes }
+    {    ;Document Type,Sell-to Customer No.,No.   }
+    {    ;Document Type,Combine Shipments,Bill-to Customer No.,Currency Code }
+    {    ;Document Type,Service Mgt. Document      }
+    {    ;Sell-to Customer No.,External Document No. }
+    {    ;Document Type,Sell-to Contact No.        }
+    {    ;Bill-to Contact No.                      }
+    {    ;Order Type                              ;MaintainSQLIndex=No;
+                                                   MaintainSIFTIndex=No }
+    {    ;Centralized Order No.                   ;MaintainSIFTIndex=No }
+    {    ;Document Type,Ship-to Post Code,Shipment Date;
+                                                   MaintainSQLIndex=No;
+                                                   MaintainSIFTIndex=No }
+    {    ;Document Type,Combine Shipments,Bill-to Customer No.,Sell-to Customer No.,Shipment Date,Ship-to Code,Currency Code;
+                                                   MaintainSQLIndex=No;
+                                                   MaintainSIFTIndex=No }
+    { No ;Document Type,Sell-to Customer No.,Land Ruckvergutung,Posting Date;
+                                                   MaintainSQLIndex=No;
+                                                   MaintainSIFTIndex=No }
+    {    ;No.                                     ;MaintainSIFTIndex=No }
+    {    ;Sell-to Customer No.,No.                ;MaintainSIFTIndex=No }
+    {    ;Document Type,Payment Terms Code,Payment Method Code,No. }
+    {    ;SklPohTypPlatby,Sell-to Customer No.,Currency Code,Inv. Period Start Date,Inv. Period End Date }
+    {    ;Currency Code,Bill-to Name,Sell-to Customer No.,Inv. Period End Date }
+    {    ;Document Type,Sell-to Customer No.,Currency Code,Order Type,Inv. Period Start Date,Inv. Period End Date }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'CSY=Chcete vytisknout dodávku %1?;ENU=Do you want to print shipment %1?';
+      Text001@1001 : TextConst 'CSY=Chcete vytisknout fakturu %1?;ENU=Do you want to print invoice %1?';
+      Text002@1002 : TextConst 'CSY=Chcete vytisknout dobropis %1?;ENU=Do you want to print credit memo %1?';
+      Text003@1003 : TextConst 'CSY=%1 nelze p²ejmenovat.;ENU=You cannot rename a %1.';
+      Text004@1004 : TextConst 'CSY=Chcete zmÏnit %1?;ENU=Do you want to change %1?';
+      Text005@1005 : TextConst 'CSY=%1 nemàºete vymazat, protoºe doklad stále obsahuje aspoÕ jeden ²ádek.;ENU=You cannot reset %1 because the document still has one or more lines.';
+      Text006@1006 : TextConst 'CSY=%1 nemàºete zmÏnit, protoºe je spojena s jednou nebo více nákupními objednávkami.;ENU=You cannot change %1 because the order is associated with one or more purchase orders.';
+      Text007@1007 : TextConst 'CSY=%1 nesmí být vÏtþí neº %2 v tabulce %3.;ENU=%1 cannot be greater than %2 in the %3 table.';
+      Text008@1008 : TextConst 'CSY="OdstranÏní tohoto dokladu zpàsobí mezeru v ƒíselné ²adÏ dodávek. ";ENU="Deleting this document will cause a gap in the number series for shipments. "';
+      Text009@1009 : TextConst 'CSY=Bude vytvo²ena prázdná dodávka %1, která zaplní mezeru v ƒíselné ²adÏ.\\;ENU=An empty shipment %1 will be created to fill this gap in the number series.\\';
+      Text010@1010 : TextConst 'CSY=Chcete pokraƒovat?;ENU=Do you want to continue?';
+      Text011@1011 : TextConst 'CSY="OdstranÏní tohoto dokladu zpàsobí mezeru v ƒíselné ²adÏ zaúƒtovaných faktur. ";ENU="Deleting this document will cause a gap in the number series for posted invoices. "';
+      Text012@1012 : TextConst 'CSY=Bude vytvo²ena prázdná zaúƒtovaná faktura %1, která zaplní mezeru v ƒíselné ²adÏ.\\;ENU=An empty posted invoice %1 will be created to fill this gap in the number series.\\';
+      Text013@1013 : TextConst 'CSY="OdstranÏní tohoto dokladu zpàsobí mezeru v ƒíselné ²adÏ zaúƒtovaných dobropisà. ";ENU="Deleting this document will cause a gap in the number series for posted credit memos. "';
+      Text014@1014 : TextConst 'CSY=Bude vytvo²en prázdný dobropis %1, který vyplní mezeru v ƒíselné ²adÏ.\\;ENU=An empty posted credit memo %1 will be created to fill this gap in the number series.\\';
+      Text015@1015 : TextConst 'CSY=Pokud zmÏníte %1, existující prodejní ²ádky budou odstranÏny.\\;ENU=If you change %1, the existing sales lines will be deleted and new sales lines based on the new information on the header will be created.\\';
+      Text017@1017 : TextConst 'CSY=D²íve neº màºete %1 zmÏnit, je nutné odstranit existující prodejní ²ádky.;ENU=You must delete the existing sales lines before you can change %1.';
+      Text018@1018 : TextConst 'CSY=V prodejní hlaviƒce jste zmÏnili %1, coº se neprojevilo v existujících prodejních ²ádcích.\;ENU=You have changed %1 on the sales header, but it has not been changed on the existing sales lines.\';
+      Text019@1019 : TextConst 'CSY=Existující prodejní ²ádky je nutné zmÏnit ruƒnÏ.;ENU=You must update the existing sales lines manually.';
+      Text020@1020 : TextConst 'CSY=ZmÏna màºe ovlivnit smÏnný kurz pouºitý p²i výpoƒtu ceny na prodejních ²ádcích.;ENU=The change may affect the exchange rate used in the price calculation of the sales lines.';
+      Text021@1021 : TextConst 'CSY=Chcete aktualizovat smÏnný kurz?;ENU=Do you want to update the exchange rate?';
+      Text022@1022 : TextConst 'CSY=Tento doklad nemàºete odstranit. Vaþe identifikace povoluje pracovat pouze od %1 %2.;ENU=You cannot delete this document. Your identification is set up to process from %1 %2 only.';
+      Text023@1023 : TextConst 'CSY=Chcete vytisknout p²íjemku vratky %1?;ENU=Do you want to print return receipt %1?';
+      Text024@1024 : TextConst 'CSY="ZmÏnili jste pole %1. VþimnÏte si, ºe p²epoƒet DPH màºe zpàsobit rozdíly, proto pozdÏji budete muset zkontrolovat ƒástky. ";ENU="You have modified the %1 field. Note that the recalculation of VAT may cause penny differences, so you must check the amounts afterwards. "';
+      Text026@1026 : TextConst 'CSY=Chcete aktualizovat pole %2 v ²ádcích tak, aby obsahovalo novou hodnotu %1?;ENU=Do you want to update the %2 field on the lines to reflect the new value of %1?';
+      Text027@1027 : TextConst 'CSY=Vaþe identifikace je nastavena pouze na zpracování od %1 do %2.;ENU=Your identification is set up to process from %1 %2 only.';
+      Text028@1028 : TextConst 'CSY=%1 nemàºete zmÏnit, pokud bylo pole %2 vyplnÏno;ENU=You cannot change the %1 when the %2 has been filled in.';
+      Text029@1029 : TextConst 'CSY="OdstranÏní tohoto dokladu zpàsobí mezeru v ƒíselné ²adÏ p²íjemek vratek. ";ENU="Deleting this document will cause a gap in the number series for return receipts. "';
+      Text030@1030 : TextConst 'CSY=Bude vytvo²ena prázdná p²íjemka vratky %1, která vyplní mezeru v ƒíselné ²adÏ.\\;ENU=An empty return receipt %1 will be created to fill this gap in the number series.\\';
+      Text031@1031 : TextConst 'CSY=ZmÏnili jste %1.\\;ENU=You have modified %1.\\';
+      Text032@1032 : TextConst 'CSY=Chcete aktualizovat ²ádky?;ENU=Do you want to update the lines?';
+      SalesSetup@1033 : Record 311;
+      GLSetup@1034 : Record 98;
+      GLAcc@1035 : Record 15;
+      SalesHeader@1036 : Record 36;
+      SalesLine@1037 : Record 37;
+      CustLedgEntry@1038 : Record 21;
+      Cust@1039 : Record 18;
+      PaymentTerms@1040 : Record 3;
+      PaymentMethod@1041 : Record 289;
+      CurrExchRate@1042 : Record 330;
+      SalesCommentLine@1043 : Record 44;
+      ShipToAddr@1044 : Record 222;
+      PostCode@1045 : Record 225;
+      BankAcc@1046 : Record 270;
+      SalesShptHeader@1047 : Record 110;
+      SalesInvHeader@1048 : Record 112;
+      SalesCrMemoHeader@1049 : Record 114;
+      ReturnRcptHeader@1050 : Record 6660;
+      GenBusPostingGrp@1051 : Record 250;
+      GenJnILine@1052 : Record 81;
+      RespCenter@1053 : Record 5714;
+      InvtSetup@1054 : Record 313;
+      Location@1055 : Record 14;
+      WhseRequest@1056 : Record 5765;
+      ShippingAgentService@1057 : Record 5790;
+      ServDocRegister@1071 : Record 5936;
+      WebSite@1072 : Record 6217;
+      TempReqLine@1089 : TEMPORARY Record 246;
+      AdvanceSalesHeader@1470000 : Record 36;
+      UserMgt@1058 : Codeunit 5700;
+      NoSeriesMgt@1059 : Codeunit 396;
+      CustCheckCreditLimit@1060 : Codeunit 312;
+      TransferExtendedText@1061 : Codeunit 378;
+      GenJnlApply@1062 : Codeunit 225;
+      SalesPost@1063 : Codeunit 80;
+      CustEntrySetApplID@1064 : Codeunit 101;
+      DimMgt@1065 : Codeunit 408;
+      WhseSourceHeader@1073 : Codeunit 5781;
+      SynchMgt@1077 : Codeunit 6205;
+      ArchiveManagement@1075 : Codeunit 5063;
+      SalesLineReserve@1066 : Codeunit 99000832;
+      ApplyCustEntries@1067 : Form 232;
+      CurrencyDate@1068 : Date;
+      HideValidationDialog@1069 : Boolean;
+      Confirmed@1070 : Boolean;
+      Text035@1076 : TextConst 'CSY=Dokud nezadáte zákazníka do nabídky, nemàºete ji vydat ani z ní vytvo²it objednávku.\\Chcete zákazníky vytvo²it nyní?;ENU=You cannot Release Quote or Make Order unless you specify a customer on the quote.\\Do you want to create customer(s) now?';
+      Text037@1078 : TextConst 'CSY=Kontakt %1 %2 se nevztahuje k zákazníkovi %3.;ENU=Contact %1 %2 is not related to customer %3.';
+      Text038@1074 : TextConst 'CSY=Kontakt %1 %2 se vztahuje k jiné spoleƒnosti neº zákazník %3.;ENU=Contact %1 %2 is related to a different company than customer %3.';
+      Text039@1086 : TextConst 'CSY=Kontakt %1 %2 se nevztahuje k zákazníkovi.;ENU=Contact %1 %2 is not related to a customer.';
+      ReservEntry@1079 : Record 337;
+      TempReservEntry@1080 : TEMPORARY Record 337;
+      DocDim@1082 : Record 357;
+      Text040@1083 : TextConst 'CSY=S touto objednávkou je spojena vyhraná p²íleºitost.\;ENU=A won opportunity is linked to this order.\';
+      Text041@1084 : TextConst 'CSY=Stav musí být zmÏnÏn na Prohra d²íve, neº màºete objednávku odstranit.\;ENU=It has to be changed to status Lost before the Order can be deleted.\';
+      Text042@1085 : TextConst 'CSY=Chcete nyní zmÏnit stav této p²íleºitosti?;ENU=Do you want to change the status for this opportunity now?';
+      Text043@1087 : TextConst 'CSY=Pràvodce byl p²eruþen;ENU=Wizard Aborted';
+      Text044@1088 : TextConst 'CSY=Stav p²íleºitosti nebyl zmÏnÏn. Program p²eruþil odstranÏní objednávky.;ENU=The status of the opportunity has not been changed. The program has aborted deleting the order.';
+      SkipSellToContact@1016 : Boolean;
+      SkipBillToContact@1025 : Boolean;
+      Text045@1081 : TextConst 'CSY="Nemàºete zmÏnit pole %1, protoºe %2 %3 má %4 = %5 a %6 jiº má p²i²azeno %7 %8.";ENU="You can not change the %1 field because %2 %3 has %4 = %5 and the %6 has already been assigned %7 %8."';
+      Text046@1090 : TextConst 'CSY=Fakturu %1 nemàºete odstranit, protoºe pro ni existuje jedna nebo více poloºek servisu.;ENU=You cannot delete invoice %1 because one or more service ledger entries exist for this invoice.';
+      Text047@1095 : TextConst 'CSY=%1 nelze zmÏnit, protoºe u prodejní objednávky existuje rezervace, sledování zboºí nebo sledování zakázky.;ENU=You cannot change %1 because reservation, item tracking, or order tracking exists on the sales order.';
+      Text048@1091 : TextConst 'CSY=Prodejní nabídka %1 jiº byla p²i²azena p²íleºitosti %2. Chcete tuto nabídku znovu p²i²adit?;ENU=Sales quote %1 has already been assigned to opportunity %2. Would you like to reassign this quote?';
+      Text049@1092 : TextConst 'CSY=Pole %1 nemàºe být prázdné, protoºe tato nabídka je p²ipojena k p²íleºitosti.;ENU=The %1 field cannot be blank because this quote is linked to an opportunity.';
+      InsertMode@1093 : Boolean;
+      CompanyInfo@1094 : Record 79;
+      Text050@1096 : TextConst 'CSY=Pokud %1 je %2 na prodejní objednávce ƒíslo %3, potom musí vþechny ²ádky prodeje, kde typ je %4, pouºívat stejnou lokaci.;ENU=If %1 is %2 in sales order no. %3, then all sales lines where type is %4 must use the same location.';
+      HideCreditCheckDialogue@1097 : Boolean;
+      Text051@1098 : TextConst 'CSY=%1 %2 prodeje jiº existuje.;ENU=The sales %1 %2 already exists.';
+      "---CDL----"@1220002 : Integer;
+      DiffGL@1220001 : Record 88660;
+      CustPostGroup@1220000 : Record 92;
+      Text053@1220035 : TextConst 'CSY=ChybnÏ nastavený zpàsob platby.;ENU=Payment Method is wrong setup.';
+      Err000@1220006 : TextConst 'CSY=Není moºno pouºívat standardní NA zálohy.;ENU=It is not possible to use standard NA Advances.';
+      Err001@1220005 : TextConst 'CSY=Není moºno pouºívat standardní NA zálohy. \Je vyplnÏno pole %1.;ENU=It is not possible to use standard NA Advances.\Field %1 is not empty.';
+      Mess000@1220004 : TextConst 'CSY=UpozornÏní: K zákazníkovi %1 existují zaplacené a nevyrovnané zálohy.;ENU=Notice: There are paid and uncleared advances for customer no. %1.';
+      tAdvanceExists@1220003 : TextConst 'CSY=K tomuto dokladu je p²ipojena záloha, nemàºete zmÏnit ƒíslo dodavatele ani ƒíslo vÏ²itele;ENU="There is an advance linked to this document. You can''t change neither Buy-from vendor No. nor Pay-to vendor No. "';
+      AdvanceCU@1220007 : Codeunit 88910;
+      cuGenJnlCheckLine@1220008 : Codeunit 11;
+      Err005@1220009 : TextConst 'CSY=Pole %1 je moºno vyplnit pouze pro typ dokladu %2.;ENU=Field %1 can be filled only for document type %2.';
+      "--EISWZR--"@1106700000 : Integer;
+      "-----Mineral-----"@1106700016 : Integer;
+      t_Entfernung@1106700015 : Record 5010052;
+      t_DebBem@1106700014 : Record 5010049;
+      t_DebAufBem@1106700013 : Record 5010054;
+      c_FrachtPreis@1106700012 : Codeunit 5010050;
+      t_MineralEinrichtung@1106700011 : Record 5010011;
+      t_VerkZ@1106700010 : Record 37;
+      t_VKZ2@1106700009 : Record 37;
+      t_Anfragen@1106700008 : Record 5010145;
+      t_Tourenzeilen@1106700007 : Record 5010015;
+      t_Dispopool@1106700006 : Record 5010164;
+      t_TZ@1106700005 : Record 5010015;
+      "--WZ----"@1106700004 : Integer;
+      DA_Liefda@1106700003 : Date;
+      Text052@1106700032 : TextConst;
+      "--EISWZR-"@1106700001 : TextConst;
+      Text0451@1106700031 : TextConst 'DEA=Dieser Auftrag kann nicht gelöscht werden, da er bereits in der Tourenplanung (Tourennr.: %1) berücksichtigt wurde.';
+      Text1106700008@1106700030 : TextConst 'ENU=Wenn %1 nicht angegeben ist, kann keine \Frachtberechnung erfolgen ! - Bitte kalkulieren Sie manuell.;DEA=Wenn %1 nicht angegeben ist, kann keine \Frachtberechnung erfolgen ! - Bitte kalkulieren Sie manuell.';
+      Text1106700009@1106700029 : TextConst 'ENU="""%1"" darf nicht manuell ausgewählt werden !";DEA="""%1"" darf nicht manuell ausgewählt werden !"';
+      Text1106700010@1106700028 : TextConst 'ENU=Bitte Funktion "Fracht berechnen" aufrufen !;DEA=Bitte Funktion "Fracht berechnen" aufrufen !';
+      Text1106700011@1106700027 : TextConst 'ENU=Soll der %1 auf allen Positionen aktualisiert werden ?\;DEA=Soll der %1 auf allen Positionen aktualisiert werden ?\';
+      Text1106700012@1106700026 : TextConst 'ENU=Es wird keine Prüfung der Artikelkategorie (Kraftstoffe) vorgenommen !;DEA=Es wird keine Prüfung der Artikelkategorie (Kraftstoffe) vorgenommen !';
+      Text1106700013@1106700025 : TextConst 'ENU=Sie können die Marge nicht mehr verändern, da %1 auf %2 steht !;DEA=Sie können die Marge nicht mehr verändern, da %1 auf %2 steht !';
+      Text1106700014@1106700024 : TextConst 'ENU=Soll die %1 auf allen Positionen aktualisiert werden ?\;DEA=Soll die %1 auf allen Positionen aktualisiert werden ?\';
+      Text1106700033@1106700023 : TextConst 'ENU=Kreditlimitprüfung nicht möglich, da Feld "%1" nicht angegeben ist !;DEA=Kreditlimitprüfung nicht möglich, da Feld "%1" nicht angegeben ist !';
+      Text1106700034@1106700022 : TextConst 'ENU=Sie haben keine Auftragspositionen eingegebenn !;DEA=Sie haben keine Auftragspositionen eingegebenn !';
+      Text1106700035@1106700021 : TextConst 'ENU=Auftrag ist bereits in Disposition.\Wollen Sie weitermachen ?;DEA=Auftrag ist bereits in Disposition.\Wollen Sie weitermachen ?';
+      Text1106700036@1106700020 : TextConst 'ENU=Dieser Auftrag ist nicht in der Tourenplanung !;DEA=Dieser Auftrag ist nicht in der Tourenplanung !';
+      Text1106700037@1106700019 : TextConst 'ENU=Auftrag konnte nicht storniert werden !;DEA=Auftrag konnte nicht storniert werden !';
+      Text50000@1106700018 : TextConst 'DEA=Anfrage %1 bei Debitor %2 nachbearbeiten.';
+      Text50010@1106700017 : TextConst 'ENU=Intercompany Documents must always be shipped completely.';
+      RE_KuEinr@1112400001 : Record 5010012;
+      t_EinrKutten@1112400000 : Record 5010012;
+      t_Geschäftsbereich@1000000000 : Record 60200;
+      RE_SalesHeader@1000000001 : Record 36;
+      Text60000@1108800000 : TextConst 'DEA=Kunde erhält Amortisationszuschlag von %1.';
+      Re_MinEinrII@1108800001 : Record 5010012;
+      Text60001@1108800002 : TextConst 'DEA=Die Position für den Amortisationszuschlag ist nicht angelegt!';
+      "---WG033---"@1220010 : Boolean;
+      TbCustBusinessArea@1220011 : Record 60201;
+      "---WG034---"@1220012 : Boolean;
+      TbVendor@1220013 : Record 23;
+      TbPurchaseHeader@1220014 : Record 38;
+      TbPurchaseLine@1220015 : Record 39;
+      LineCounter@1220016 : Integer;
+      Text60002@1220018 : TextConst 'CSY=Chcete odeslat e-mailem/faxem nákupní objednávku %1 dodavateli %2?';
+      Text60003@1220019 : TextConst 'CSY=Objednávka nebyla odeslána.';
+      Text60004@1220022 : TextConst 'CSY=Chcete odeslat emailem/faxem nákupní objednávku %1 p²epravci %2?';
+      Text60005@1220017 : TextConst 'CSY="Pro Kód zemÏ plátce %1 = %1 není nastaveno DI¼.";ENU=There is no setup for Bill-to Country code %2 of customer %1';
+      Err003@1220020 : TextConst 'CSY=Zákazník %1 je blokován.\\Dàvod blokování: %2.;ENU=Customer %1 is blocked.\\Reason of blocking is: %2.';
+      Text50021@1220023 : TextConst 'CSY=Chcete aktualizovat smÏnný kurz DPH?;ENU=Do you want to update the VAT exchange rate?;SKY=Chcete aktualizova£ výmenný kurz DPH?';
+      "---J10015---"@1220021 : Integer;
+      SalesHeaderEXT@1220024 : Record 84940;
+      SalesHeaderEXTLoaded@1220025 : Boolean;
+      VATCurrMgt@1220026 : Codeunit 84811;
+      Text50022@1220027 : TextConst 'CSY=Rozþí²ené ²ádky pro DPH byly vynulovány.;ENU=VAT extended lines have been cleared.';
+      Text50023@1220028 : TextConst 'CSY=Rozþí²ené ²ádky pro DPH byly aktualizovány.;ENU=VAT extended lines have been updated.';
+      "-CDLKH7-"@1220029 : Integer;
+      VATControlStatMgtCU@1220030 : Codeunit 4042400;
+      "-CDLOUD-"@1220031 : Integer;
+      VATBusPostGroup@1220032 : Record 323;
+      NoSeries@1220033 : Record 308;
+      gRecursiveCount@1220034 : Integer;
+      recCustomer@1220037 : Record 18;
+      recSalesLine@1220038 : Record 37;
+      sumLines@1220039 : Integer;
+      recExtTextHeader@1220040 : Record 279;
+      recExtTextLine@1220041 : Record 280;
+      sumLines10000@1220042 : Integer;
+      recStandardText@1220044 : Record 7;
+      ErrCrMemoDueDate@1220036 : TextConst 'CSY=Pro dobropis musí být vyplnÏné pole %1 and %2.;ENU="You have to fill in fields %1 and %2. "';
+      NAV2016AssignmentManagement@1220043 : Codeunit 76014;
+
+    PROCEDURE InitRecord@10();
+    VAR
+      NoSeriesLoc@1220000 : Record 308;
+    BEGIN
+      CASE "Document Type" OF
+        "Document Type"::Quote,"Document Type"::Order:
+          BEGIN
+            NoSeriesMgt.SetDefaultSeries("Posting No. Series",SalesSetup."Posted Invoice Nos.");
+            NoSeriesMgt.SetDefaultSeries("Shipping No. Series",SalesSetup."Posted Shipment Nos.");
+          END;
+        "Document Type"::Invoice:
+          BEGIN
+            IF ("No. Series" <> '') AND
+               (SalesSetup."Invoice Nos." = SalesSetup."Posted Invoice Nos.")
+            THEN
+              "Posting No. Series" := "No. Series"
+            ELSE
+              NoSeriesMgt.SetDefaultSeries("Posting No. Series",SalesSetup."Posted Invoice Nos.");
+            IF SalesSetup."Shipment on Invoice" THEN
+              NoSeriesMgt.SetDefaultSeries("Shipping No. Series",SalesSetup."Posted Shipment Nos.");
+          END;
+        "Document Type"::"Return Order":
+          BEGIN
+            NoSeriesMgt.SetDefaultSeries("Posting No. Series",SalesSetup."Posted Credit Memo Nos.");
+            NoSeriesMgt.SetDefaultSeries("Return Receipt No. Series",SalesSetup."Posted Return Receipt Nos.");
+          END;
+        "Document Type"::"Credit Memo":
+          BEGIN
+            IF ("No. Series" <> '') AND
+               (SalesSetup."Credit Memo Nos." = SalesSetup."Posted Credit Memo Nos.")
+            THEN
+              "Posting No. Series" := "No. Series"
+            ELSE
+              NoSeriesMgt.SetDefaultSeries("Posting No. Series",SalesSetup."Posted Credit Memo Nos.");
+            IF SalesSetup."Return Receipt on Credit Memo" THEN
+              NoSeriesMgt.SetDefaultSeries("Return Receipt No. Series",SalesSetup."Posted Return Receipt Nos.");
+          END;
+      END;
+
+      IF "Document Type" IN ["Document Type"::Order,"Document Type"::Invoice,"Document Type"::Quote] THEN
+        BEGIN
+          //EISWZR Start
+          //"Shipment Date" := WORKDATE;
+          IF "Order Type" = "Order Type"::Heizöl THEN
+              BEGIN
+                VALIDATE("Shipment Date", 0D);
+              END
+           //WZ°1 - BEGIN
+            ELSE
+              BEGIN
+
+              //"Shipment Date" := WORKDATE;
+
+              IF ("Order Type" = "Order Type"::Kraftstoff) OR ("Order Type" = "Order Type"::"Schmierstoff/Folgemarkt") OR
+                 ("Order Type" = "Order Type"::Werbematerial) THEN
+                BEGIN
+                 RE_KuEinr.GET;
+                 DA_Liefda := TODAY + RE_KuEinr."Lieferzeitvorbel. Kraftstoffe";
+                 VALIDATE("Shipment Date",DA_Liefda);
+
+      //START WG034 - PV - 28.11.2007 - fill Requested deliv. date
+                 "Requested Delivery Date" := CALCDATE('<1D>', TODAY);
+                 "Latest Shipping Date"    := "Requested Delivery Date";
+                 VALIDATE("Posting Date", "Requested Delivery Date");
+                 VALIDATE("Document Date", "Requested Delivery Date");
+      //STOP WG034 - PV - 28.11.2007 - fill Requested deliv. date
+
+      //START WG026 - 27.11.2007 - PV - new field 84562 "Kind of Order"
+                 VALIDATE("Kind of Order","Kind of Order"::"Vendor->Customer");
+                 VALIDATE("Shipment Date", "Requested Delivery Date");
+      //STOP WG026 - 27.11.2007 - PV - new field 84562 "Kind of Order"
+
+                END
+               ELSE
+             //WZ°1 - ENDE
+                VALIDATE("Shipment Date", 0D); //AVIA-RK-070104
+              END;
+          //EISWZr End
+          "Order Date" := WORKDATE;
+        END;
+      IF "Document Type" = "Document Type"::"Return Order" THEN
+        "Order Date":= WORKDATE;
+
+      IF NOT ("Document Type" IN ["Document Type"::"Blanket Order","Document Type"::Quote]) AND
+         ("Posting Date" = 0D)
+      THEN
+        "Posting Date" := WORKDATE;
+
+      IF "Document Date" = 0D THEN
+         "Document Date" := WORKDATE;
+
+      VALIDATE("Location Code",UserMgt.GetLocation(0,Cust."Location Code","Responsibility Center"));
+
+      IF "Document Type" IN ["Document Type"::"Return Order","Document Type"::"Credit Memo"] THEN BEGIN
+        GLSetup.GET;
+        Correction := GLSetup."Mark Cr. Memos as Corrections";
+      END;
+
+      "Posting Description" := FORMAT("Document Type") + ' ' + "No.";
+
+      Reserve := Reserve::Optional;
+
+      IF InvtSetup.GET THEN
+        VALIDATE("Outbound Whse. Handling Time",InvtSetup."Outbound Whse. Handling Time");
+
+      "Responsibility Center" := UserMgt.GetRespCenter(0,"Responsibility Center");
+
+      // START CDLEU - 3.4.2005 - ZJ: modification for European Union
+      //START - WG - 13.06.2012 - RCH - M3599 - Fixed VAT Taxation Date
+      IF NOT "Fixed VAT Taxation Date" THEN
+      //STOP - WG - 13.06.2012 - RCH - M3599 - Fixed VAT Taxation Date
+         "VAT Taxation Date" := "Posting Date";
+      // STOP CDLEU - 3.4.2005 - ZJ: modification for European Union
+
+      //START CDLKH7 - 01.10.2015 - PU - VAT Control Statement
+      "VAT Control Statement Date" := "VAT Taxation Date";
+      //STOP CDLKH7 - 01.10.2015 - PU - VAT Control Statement
+
+      //NAV-18944+
+      IF NoSeriesLoc.GET("Posting No. Series") THEN
+        VALIDATE("Internal document", NoSeriesLoc."Internal Docs Nos.");
+      //NAV-18944-
+    END;
+
+    PROCEDURE AssistEdit@1(OldSalesHeader@1000 : Record 36) : Boolean;
+    VAR
+      SalesHeader2@1001 : Record 36;
+    BEGIN
+      WITH SalesHeader DO BEGIN
+        SalesHeader.COPY(Rec);
+        SalesSetup.GET;
+        TestNoSeries;
+        IF NoSeriesMgt.SelectSeries(GetNoSeriesCode,OldSalesHeader."No. Series","No. Series") THEN BEGIN
+          IF ("Sell-to Customer No." = '') AND ("Sell-to Contact No." = '') THEN BEGIN
+            HideCreditCheckDialogue := FALSE;
+            CheckCreditMaxBeforeInsert;
+            HideCreditCheckDialogue := TRUE;
+          END;
+          NoSeriesMgt.SetSeries("No.");
+          IF SalesHeader2.GET("Document Type","No.") THEN
+            ERROR(Text051,LOWERCASE(FORMAT("Document Type")),"No.");
+          Rec := SalesHeader;
+          EXIT(TRUE);
+        END;
+      END;
+    END;
+
+    LOCAL PROCEDURE TestNoSeries@6() : Boolean;
+    BEGIN
+      CASE "Document Type" OF
+        "Document Type"::Quote:
+          SalesSetup.TESTFIELD("Quote Nos.");
+        "Document Type"::Order:
+          SalesSetup.TESTFIELD("Order Nos.");
+        "Document Type"::Invoice:
+          BEGIN
+            SalesSetup.TESTFIELD("Invoice Nos.");
+            SalesSetup.TESTFIELD("Posted Invoice Nos.");
+          END;
+        "Document Type"::"Return Order":
+          SalesSetup.TESTFIELD("Return Order Nos.");
+        "Document Type"::"Credit Memo":
+          BEGIN
+            SalesSetup.TESTFIELD("Credit Memo Nos.");
+            SalesSetup.TESTFIELD("Posted Credit Memo Nos.");
+          END;
+        "Document Type"::"Blanket Order":
+          SalesSetup.TESTFIELD("Blanket Order Nos.");
+        "Document Type"::Advance:
+           SalesSetup.TESTFIELD("Advance Nos.");
+      END;
+    END;
+
+    LOCAL PROCEDURE GetNoSeriesCode@9() : Code[10];
+    BEGIN
+      CASE "Document Type" OF
+        "Document Type"::Quote:
+          EXIT(SalesSetup."Quote Nos.");
+        "Document Type"::Order:
+          EXIT(SalesSetup."Order Nos.");
+        "Document Type"::Invoice:
+          EXIT(SalesSetup."Invoice Nos.");
+        "Document Type"::"Return Order":
+          EXIT(SalesSetup."Return Order Nos.");
+        "Document Type"::"Credit Memo":
+          EXIT(SalesSetup."Credit Memo Nos.");
+        "Document Type"::"Blanket Order":
+          EXIT(SalesSetup."Blanket Order Nos.");
+        "Document Type"::Advance:
+          EXIT(SalesSetup."Advance Nos.");
+      END;
+    END;
+
+    LOCAL PROCEDURE GetPostingNoSeriesCode@8() : Code[10];
+    BEGIN
+      IF "Document Type" IN ["Document Type"::"Return Order","Document Type"::"Credit Memo"] THEN
+        EXIT(SalesSetup."Posted Credit Memo Nos.");
+      EXIT(SalesSetup."Posted Invoice Nos.");
+    END;
+
+    PROCEDURE ConfirmDeletion@11() : Boolean;
+    BEGIN
+      SalesPost.TestDeleteHeader(Rec,SalesShptHeader,SalesInvHeader,SalesCrMemoHeader,ReturnRcptHeader);
+      IF SalesShptHeader."No." <> '' THEN
+        IF NOT CONFIRM(
+             Text008 +
+             Text009 +
+             Text010,TRUE,
+             SalesShptHeader."No.")
+        THEN
+          EXIT;
+      IF SalesInvHeader."No." <> '' THEN
+        IF NOT CONFIRM(
+             Text011 +
+             Text012 +
+             Text010,TRUE,
+             SalesInvHeader."No.")
+        THEN
+          EXIT;
+      IF SalesCrMemoHeader."No." <> '' THEN
+        IF NOT CONFIRM(
+             Text013 +
+             Text014 +
+             Text010,TRUE,
+             SalesCrMemoHeader."No.")
+        THEN
+          EXIT;
+      IF ReturnRcptHeader."No." <> '' THEN
+        IF NOT CONFIRM(
+             Text029 +
+             Text030 +
+             Text010,TRUE,
+             ReturnRcptHeader."No.")
+        THEN
+          EXIT;
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE GetCust@2(CustNo@1000 : Code[20]);
+    BEGIN
+      IF NOT (("Document Type" = "Document Type"::Quote) AND (CustNo = '')) THEN BEGIN
+        IF CustNo <> Cust."No." THEN
+          Cust.GET(CustNo);
+      END ELSE
+        CLEAR(Cust);
+    END;
+
+    PROCEDURE SalesLinesExist@3() : Boolean;
+    BEGIN
+      SalesLine.RESET;
+      SalesLine.SETRANGE("Document Type","Document Type");
+      SalesLine.SETRANGE("Document No.","No.");
+      EXIT(SalesLine.FINDFIRST);
+    END;
+
+    PROCEDURE RecreateSalesLines@4(ChangedFieldName@1000 : Text[100]);
+    VAR
+      SalesLineTmp@1001 : TEMPORARY Record 37;
+      ItemChargeAssgntSales@1004 : Record 5809;
+      TempItemChargeAssgntSales@1003 : TEMPORARY Record 5809;
+      TempInteger@1006 : TEMPORARY Record 2000000026;
+      ServDocReg@1005 : Record 5936;
+      TempServDocReg@1007 : TEMPORARY Record 5936;
+      ExtendedTextAdded@1002 : Boolean;
+    BEGIN
+      IF SalesLinesExist THEN BEGIN
+        IF HideValidationDialog OR NOT GUIALLOWED THEN
+          Confirmed := TRUE
+        ELSE
+          Confirmed :=
+            CONFIRM(
+              Text015 +
+              Text004,FALSE,ChangedFieldName);
+        IF Confirmed THEN BEGIN
+          //DocDim.LOCKTABLE;
+          //SalesLine.LOCKTABLE;
+          //ItemChargeAssgntSales.LOCKTABLE;
+          //ReservEntry.LOCKTABLE;
+          MODIFY;
+
+          SalesLine.RESET;
+          SalesLine.SETRANGE("Document Type","Document Type");
+          SalesLine.SETRANGE("Document No.","No.");
+          IF SalesLine.FINDFIRST THEN BEGIN
+            REPEAT
+              SalesLine.TESTFIELD("Quantity Shipped",0);
+              SalesLine.TESTFIELD("Quantity Invoiced",0);
+              SalesLine.TESTFIELD("Return Qty. Received",0);
+              SalesLine.TESTFIELD("Shipment No.",'');
+              SalesLine.TESTFIELD("Return Receipt No.",'');
+              SalesLine.TESTFIELD("Blanket Order No.",'');
+              SalesLineTmp := SalesLine;
+              IF SalesLine.Nonstock THEN BEGIN
+                SalesLine.Nonstock := FALSE;
+                SalesLine.MODIFY;
+              END;
+              SalesLineTmp.INSERT;
+              RecreateReservEntry(SalesLine,0,TRUE);
+              RecreateReqLine(SalesLine,0,TRUE);
+            UNTIL SalesLine.NEXT = 0;
+
+            IF "Location Code" <> xRec."Location Code" THEN
+              IF NOT TempReservEntry.ISEMPTY THEN
+                ERROR(Text047,FIELDCAPTION("Location Code"));
+
+            ItemChargeAssgntSales.SETRANGE("Document Type","Document Type");
+            ItemChargeAssgntSales.SETRANGE("Document No.","No.");
+            IF ItemChargeAssgntSales.FINDFIRST THEN BEGIN
+              REPEAT
+                TempItemChargeAssgntSales.INIT;
+                TempItemChargeAssgntSales := ItemChargeAssgntSales;
+                TempItemChargeAssgntSales.INSERT;
+              UNTIL ItemChargeAssgntSales.NEXT = 0;
+              IF NOT ItemChargeAssgntSales.ISEMPTY THEN
+                ItemChargeAssgntSales.DELETEALL;
+            END;
+            IF ("Service Mgt. Document") AND ("Document Type" = "Document Type"::Invoice) THEN BEGIN
+              ServDocReg.SETCURRENTKEY("Sales Document Type","Sales Document No.");
+              ServDocReg.SETRANGE("Sales Document Type",ServDocReg."Sales Document Type"::"Sales Invoice");
+              ServDocReg.SETRANGE("Sales Document No.",SalesLineTmp."Document No.");
+              IF ServDocReg.FINDFIRST THEN
+                REPEAT
+                  TempServDocReg := ServDocReg;
+                UNTIL ServDocReg.NEXT = 0;
+            END;
+            IF NOT SalesLine.ISEMPTY THEN
+              SalesLine.DELETEALL(TRUE);
+            IF ("Service Mgt. Document") AND ("Document Type" = "Document Type"::Invoice) THEN BEGIN
+              IF TempServDocReg.FINDFIRST THEN
+                REPEAT
+                  ServDocReg := TempServDocReg;
+                UNTIL TempServDocReg.NEXT = 0;
+              ServDocReg.INSERT;
+            END;
+
+            SalesLine.INIT;
+            SalesLine."Line No." := 0;
+            SalesLineTmp.FINDFIRST;
+            ExtendedTextAdded := FALSE;
+            SalesLine.BlockDynamicTracking(TRUE);
+            REPEAT
+              IF SalesLineTmp."Attached to Line No." = 0 THEN BEGIN
+                SalesLine.INIT;
+                SalesLine."Line No." := SalesLine."Line No." + 10000;
+                SalesLine.VALIDATE(Type,SalesLineTmp.Type);
+                SalesLine."Serv. Price Adjmt. Gr. Code" := SalesLineTmp."Serv. Price Adjmt. Gr. Code";
+                SalesLine."Service Contract No." := SalesLineTmp."Service Contract No.";
+                SalesLine."Service Order No." := SalesLineTmp."Service Order No.";
+                SalesLine."Service Item No." := SalesLineTmp."Service Item No.";
+                SalesLine."Appl.-to Service Entry" := SalesLineTmp."Appl.-to Service Entry";
+                IF SalesLineTmp."No." = '' THEN BEGIN
+                  SalesLine.VALIDATE(Description,SalesLineTmp.Description);
+                  SalesLine.VALIDATE("Description 2",SalesLineTmp."Description 2");
+                END ELSE BEGIN
+                  SalesLine.VALIDATE("No.",SalesLineTmp."No.");
+                  IF SalesLine.Type <> SalesLine.Type::" " THEN BEGIN
+                    SalesLine.VALIDATE("Unit of Measure Code",SalesLineTmp."Unit of Measure Code");
+                    SalesLine.VALIDATE("Variant Code",SalesLineTmp."Variant Code");
+                    IF SalesLineTmp.Quantity <> 0 THEN
+                      SalesLine.VALIDATE(Quantity,SalesLineTmp.Quantity);
+                    SalesLine."Purchase Order No." := SalesLineTmp."Purchase Order No.";
+                    SalesLine."Purch. Order Line No." := SalesLineTmp."Purch. Order Line No.";
+                    SalesLine."Drop Shipment" := SalesLine."Purch. Order Line No." <> 0;
+                  END;
+                END;
+                IF ("Service Mgt. Document") THEN BEGIN
+                  IF (SalesLine.Type <> 0) AND
+                     (SalesLine."No." <> '')  THEN
+                    SalesLine.VALIDATE("Unit Price",SalesLineTmp."Unit Price");
+                  SalesLine."Serv. Price Adjmt. Gr. Code" := SalesLineTmp."Serv. Price Adjmt. Gr. Code";
+                  SalesLine."Service Contract No." := SalesLineTmp."Service Contract No.";
+                  SalesLine."Service Order No." := SalesLineTmp."Service Order No.";
+                  SalesLine."Service Item No." := SalesLineTmp."Service Item No.";
+                  SalesLine."Appl.-to Service Entry" := SalesLineTmp."Appl.-to Service Entry";
+                  SalesLine.VALIDATE(Description,SalesLineTmp.Description);
+                  SalesLine.VALIDATE("Description 2",SalesLineTmp."Description 2");
+                END;
+                // WZ-START
+                SalesLine.VALIDATE(SalesLine."Unit Price", SalesLineTmp."Unit Price");
+                SalesLine."Sales Price Calculation" := SalesLineTmp."Sales Price Calculation";
+                SalesLine."Sales Price Oil Trading" := SalesLineTmp."Sales Price Oil Trading";
+                SalesLine."Abschlußarbeiten"();
+      //START WG019 - 24.10.2007 - JV - Sales Source Prices
+                // AC 13.10.2008 Start
+                //SalesLine."Transaction Time" := SalesLineTmp."Transaction Time";
+                  SalesLine."TT Date" := SalesLineTmp."TT Date";
+                  SalesLine."TT Time" := SalesLineTmp."TT Time";
+                // AC 13.10.2008 Stop
+                SalesLine."Sales Charge 1" := SalesLineTmp."Sales Charge 1";
+                SalesLine."Sales Charge 2" := SalesLineTmp."Sales Charge 2";
+                SalesLine."Sales Charge 3" := SalesLineTmp."Sales Charge 3";
+                SalesLine."Sales Charge 1 Amount" := SalesLineTmp."Sales Charge 1 Amount";
+                SalesLine."Sales Charge 2 Amount" := SalesLineTmp."Sales Charge 2 Amount";
+                SalesLine."Sales Charge 3 Amount" := SalesLineTmp."Sales Charge 3 Amount";
+                SalesLine.VALIDATE("Sales Source Code",SalesLineTmp."Sales Source Code");
+      //STOP WG019 - 24.10.2007 - JV - Sales Source Prices
+                // SalesLine.INSERT;
+                SalesLine.INSERT(TRUE);
+                // WZ-ENDE
+
+                ExtendedTextAdded := FALSE;
+
+                IF SalesLine.Type = SalesLine.Type::Item THEN BEGIN
+                  ClearItemAssgntSalesFilter(TempItemChargeAssgntSales);
+                  TempItemChargeAssgntSales.SETRANGE("Applies-to Doc. Type",SalesLineTmp."Document Type");
+                  TempItemChargeAssgntSales.SETRANGE("Applies-to Doc. No.",SalesLineTmp."Document No.");
+                  TempItemChargeAssgntSales.SETRANGE("Applies-to Doc. Line No.",SalesLineTmp."Line No.");
+                  IF TempItemChargeAssgntSales.FINDFIRST THEN BEGIN
+                    REPEAT
+                      IF NOT TempItemChargeAssgntSales.MARK THEN BEGIN
+                        TempItemChargeAssgntSales."Applies-to Doc. Line No." := SalesLine."Line No.";
+                        TempItemChargeAssgntSales.Description := SalesLine.Description;
+                        TempItemChargeAssgntSales.MODIFY;
+                        TempItemChargeAssgntSales.MARK(TRUE);
+                      END;
+                    UNTIL TempItemChargeAssgntSales.NEXT = 0;
+                  END;
+                END;
+                IF SalesLine.Type = SalesLine.Type::"Charge (Item)" THEN BEGIN
+                  TempInteger.INIT;
+                  TempInteger.Number := SalesLine."Line No.";
+                  TempInteger.INSERT;
+                END;
+              END ELSE
+                IF NOT ExtendedTextAdded THEN BEGIN
+                  TransferExtendedText.SalesCheckIfAnyExtText(SalesLine,TRUE);
+                  TransferExtendedText.InsertSalesExtText(SalesLine);
+                  SalesLine.FINDLAST;
+                  ExtendedTextAdded := TRUE;
+                END;
+              RecreateReservEntry(SalesLineTmp,SalesLine."Line No.",FALSE);
+              RecreateReqLine(SalesLineTmp,SalesLine."Line No.",FALSE);
+            UNTIL SalesLineTmp.NEXT = 0;
+
+            ClearItemAssgntSalesFilter(TempItemChargeAssgntSales);
+            SalesLineTmp.SETRANGE(Type,SalesLine.Type::"Charge (Item)");
+            IF SalesLineTmp.FINDFIRST THEN
+              REPEAT
+                TempItemChargeAssgntSales.SETRANGE("Document Line No.",SalesLineTmp."Line No.");
+                IF TempItemChargeAssgntSales.FINDFIRST THEN BEGIN
+                  REPEAT
+                    TempInteger.FINDFIRST;
+                    ItemChargeAssgntSales.INIT;
+                    ItemChargeAssgntSales := TempItemChargeAssgntSales;
+                    ItemChargeAssgntSales."Document Line No." := TempInteger.Number;
+                    ItemChargeAssgntSales.VALIDATE("Unit Cost",0);
+                    ItemChargeAssgntSales.INSERT;
+                  UNTIL TempItemChargeAssgntSales.NEXT = 0;
+                  TempInteger.DELETE;
+                END;
+              UNTIL SalesLineTmp.NEXT = 0;
+
+            SalesLineTmp.SETRANGE(Type);
+            IF NOT SalesLineTmp.ISEMPTY THEN
+              SalesLineTmp.DELETEALL;
+            ClearItemAssgntSalesFilter(TempItemChargeAssgntSales);
+            IF NOT TempItemChargeAssgntSales.ISEMPTY THEN
+              TempItemChargeAssgntSales.DELETEALL;
+          END;
+        END ELSE
+          ERROR(
+            Text017,ChangedFieldName);
+      END;
+      SalesLine.BlockDynamicTracking(FALSE);
+    END;
+
+    PROCEDURE MessageIfSalesLinesExist@5(ChangedFieldName@1000 : Text[100]);
+    BEGIN
+      IF SalesLinesExist AND NOT HideValidationDialog THEN
+        MESSAGE(
+          Text018 +
+          Text019,
+          ChangedFieldName);
+    END;
+
+    PROCEDURE PriceMessageIfSalesLinesExist@7(ChangedFieldName@1000 : Text[100]);
+    BEGIN
+      IF SalesLinesExist AND NOT HideValidationDialog THEN
+        MESSAGE(
+          Text018 +
+          Text020,ChangedFieldName);
+    END;
+
+    LOCAL PROCEDURE UpdateCurrencyFactor@12();
+    BEGIN
+      IF "Currency Code" <> '' THEN BEGIN
+        IF ("Document Type" IN ["Document Type"::Quote,"Document Type"::"Blanket Order"]) AND
+           ("Posting Date" = 0D)
+        THEN
+          CurrencyDate := WORKDATE
+        ELSE
+          CurrencyDate := "Posting Date";
+
+        "Currency Factor" := CurrExchRate.ExchangeRate(CurrencyDate,"Currency Code");
+      END ELSE
+        "Currency Factor" := 0;
+    END;
+
+    LOCAL PROCEDURE ConfirmUpdateCurrencyFactor@13();
+    BEGIN
+      IF HideValidationDialog THEN
+        Confirmed := TRUE
+      ELSE
+        Confirmed := CONFIRM(Text021,FALSE);
+      IF Confirmed THEN
+        VALIDATE("Currency Factor")
+      ELSE
+        "Currency Factor" := xRec."Currency Factor";
+    END;
+
+    PROCEDURE SetHideValidationDialog@14(NewHideValidationDialog@1000 : Boolean);
+    BEGIN
+      HideValidationDialog := NewHideValidationDialog;
+    END;
+
+    PROCEDURE UpdateSalesLines@15(ChangedFieldName@1000 : Text[100];AskQuestion@1001 : Boolean);
+    VAR
+      Question@1002 : Text[250];
+      UpdateLines@1003 : Boolean;
+    BEGIN
+      IF SalesLinesExist AND AskQuestion THEN BEGIN
+        Question := STRSUBSTNO(
+          Text031 +
+          Text032,ChangedFieldName);
+        IF GUIALLOWED AND NOT DIALOG.CONFIRM(Question,TRUE) THEN
+          EXIT
+        ELSE
+          UpdateLines := TRUE;
+      END;
+      IF SalesLinesExist THEN BEGIN
+        //DocDim.LOCKTABLE;
+        //SalesLine.LOCKTABLE;
+        MODIFY;
+
+        SalesLine.RESET;
+        SalesLine.SETRANGE("Document Type","Document Type");
+        SalesLine.SETRANGE("Document No.","No.");
+        IF SalesLine.FINDFIRST THEN
+          REPEAT
+            CASE ChangedFieldName OF
+              FIELDCAPTION("Shipment Date") :
+              IF SalesLine."No." <> '' THEN
+                SalesLine.VALIDATE("Shipment Date","Shipment Date");
+              FIELDCAPTION("Currency Factor") :
+                IF SalesLine.Type <> SalesLine.Type::" " THEN BEGIN
+                  SalesLine.VALIDATE("Unit Price");
+                  SalesLine.VALIDATE("Unit Cost (LCY)");
+                END;
+              FIELDCAPTION("Transaction Type") :
+                SalesLine.VALIDATE("Transaction Type","Transaction Type");
+              FIELDCAPTION("Transport Method") :
+                SalesLine.VALIDATE("Transport Method","Transport Method");
+              FIELDCAPTION("Exit Point") :
+                SalesLine.VALIDATE("Exit Point","Exit Point");
+              FIELDCAPTION(Area) :
+                SalesLine.VALIDATE(Area,Area);
+              FIELDCAPTION("Transaction Specification") :
+                SalesLine.VALIDATE("Transaction Specification","Transaction Specification");
+              FIELDCAPTION("Shipping Agent Code") :
+                SalesLine.VALIDATE("Shipping Agent Code","Shipping Agent Code");
+              FIELDCAPTION("Shipping Agent Service Code") :
+                IF SalesLine."No." <> '' THEN
+                  SalesLine.VALIDATE("Shipping Agent Service Code","Shipping Agent Service Code");
+              FIELDCAPTION("Shipping Time") :
+                IF SalesLine."No." <> '' THEN
+                  SalesLine.VALIDATE("Shipping Time","Shipping Time");
+              FIELDCAPTION("Requested Delivery Date") :
+                IF SalesLine."No." <> '' THEN
+                  SalesLine.VALIDATE("Requested Delivery Date","Requested Delivery Date");
+              FIELDCAPTION("Promised Delivery Date") :
+                IF SalesLine."No." <> '' THEN
+                  SalesLine.VALIDATE("Promised Delivery Date","Promised Delivery Date");
+              FIELDCAPTION("Outbound Whse. Handling Time") :
+                IF SalesLine."No." <> '' THEN
+                  SalesLine.VALIDATE("Outbound Whse. Handling Time","Outbound Whse. Handling Time");
+
+      //START WG037 - PV - 16.12.2007 - Freight Calculation
+              FIELDCAPTION("Freight Table") :
+                IF SalesLine."No." <> '' THEN
+                  SalesLine.VALIDATE("Freight Table","Freight Table");
+      //STOP WG037 - PV - 16.12.2007 - Freight Calculation
+
+              //EISWZR Start
+              //* Verkaufszeilen aktualisieren (Marge)
+              //* *******************************************************************************
+              FIELDCAPTION("Margin (LCY)") :
+                IF (SalesLine.Type = SalesLine.Type::Item) AND
+                 (SalesLine."Kind of Item" = SalesLine."Kind of Item"::Flüssig) THEN BEGIN
+                  SalesLine.VALIDATE(SalesLine."Margin (LCY)","Margin (LCY)");
+                  SalesLine.MODIFY;
+                END;
+              FIELDCAPTION("Freight Rate (LCY)") :
+                //* *** Fracht durch ggf. geänderte Liefermenge / Beladestelle nochmals auf Zeilen zuweisen ...
+                IF (SalesLine.Type = SalesLine.Type::Item) AND
+                (SalesLine."Kind of Item" = SalesLine."Kind of Item"::Flüssig) THEN BEGIN
+                  SalesLine.VALIDATE(SalesLine."Freight Rate (LCY)","Freight Rate (LCY)");
+                  SalesLine.MODIFY;
+                END;
+              FIELDCAPTION("Frachtsatz (Manuell)") :
+                //* *** Fracht durch ggf. geänderte Liefermenge / Beladestelle nochmals auf Zeilen zuweisen ...
+                IF (SalesLine.Type = SalesLine.Type::Item) AND
+                (SalesLine."Kind of Item" = SalesLine."Kind of Item"::Flüssig) THEN BEGIN
+                  SalesLine.VALIDATE(SalesLine."Freight Rate (LCY)","Frachtsatz (Manuell)");
+                  SalesLine.MODIFY;
+                END;
+
+              //* <<<<< WZ-MINERAL **************************************************************
+              //EISWZR End
+      // - TESSOL1.00:GB°1 --- start
+              FIELDCAPTION(Geschaftsbereich) :
+                IF SalesLine."No." <> '' THEN
+                  SalesLine.VALIDATE(Geschaftsbereich,Geschaftsbereich);
+      // - TESSOL1.00:GB°1 --- Ende
+
+            END;
+            SalesLineReserve.AssignForPlanning(SalesLine);
+            SalesLine.MODIFY(TRUE);
+          UNTIL SalesLine.NEXT = 0;
+      END;
+    END;
+
+    PROCEDURE CreateDim@16(Type1@1000 : Integer;No1@1001 : Code[20];Type2@1002 : Integer;No2@1003 : Code[20];Type3@1004 : Integer;No3@1005 : Code[20];Type4@1006 : Integer;No4@1007 : Code[20];Type5@1008 : Integer;No5@1009 : Code[20];Type6@1014 : Integer;No6@1013 : Code[20]);
+    VAR
+      SourceCodeSetup@1010 : Record 242;
+      TableID@1011 : ARRAY [10] OF Integer;
+      No@1012 : ARRAY [10] OF Code[20];
+    BEGIN
+      //WG003 VP 9.8.2007 - new parameters: Type7, No7
+      //      Mantis 3688 - VP 15.1.2013 - parameters removed
+
+      SourceCodeSetup.GET;
+      TableID[1] := Type1;
+      No[1] := No1;
+      TableID[2] := Type2;
+      No[2] := No2;
+      TableID[3] := Type3;
+      No[3] := No3;
+      TableID[4] := Type4;
+      No[4] := No4;
+      TableID[5] := Type5;
+      No[5] := No5;
+      TableID[6] := Type6;
+      No[6] := No6;
+      //START Mantis 3688 VP 15.1.2013 function removed
+      ////START WG003 VP 9.8.2007
+      //TableID[7] := Type7;
+      //No[7] := No7;
+      ////STOP WG003 VP 9.8.2007
+      //STOP Mantis 3688 VP 15.1.2013 function removed
+
+      //EISWZR Start
+      // KS-START
+      IF (("Order Type" <> "Order Type"::"Schmierstoff/Folgemarkt")) THEN
+      //   ("Order Type" <> "Order Type"::Heizöl) or
+      //   ("Order Type" <> "Order Type"::kraftstoff)) then
+        BEGIN
+      // KS-ENDE
+      //EISWZR End
+
+      "Shortcut Dimension 1 Code" := '';
+      "Shortcut Dimension 2 Code" := '';
+      DimMgt.GetDefaultDim(
+        TableID,No,SourceCodeSetup.Sales,
+        "Shortcut Dimension 1 Code","Shortcut Dimension 2 Code");
+      IF "No." <> '' THEN
+        DimMgt.UpdateDocDefaultDim(
+          DATABASE::"Sales Header","Document Type","No.",0,
+          "Shortcut Dimension 1 Code","Shortcut Dimension 2 Code");
+      //EISWZR Start
+      // KS-START
+        END;
+      // KS-ENDE
+      //EISWZR End
+
+      //START WG002 - 19.09.2007 - PV - Generate Dimension Value ORDER while creating Sales Order
+      //+WAG - 30.12.2013 - AS - M0006995
+      //CreateORDERdim;
+      //-WAG - 30.12.2013 - AS - M0006995
+      //STOP WG002 - 19.09.2007 - PV - Generate Dimension Value ORDER while creating Sales Order
+    END;
+
+    PROCEDURE ValidateShortcutDimCode@19(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
+    BEGIN
+      DimMgt.ValidateDimValueCode(FieldNumber,ShortcutDimCode);
+      IF "No." <> '' THEN BEGIN
+        DimMgt.SaveDocDim(
+          DATABASE::"Sales Header","Document Type","No.",0,FieldNumber,ShortcutDimCode);
+        // *** START MIN° wz.ak 16.11.2006
+        RE_SalesHeader := Rec;
+        GET("Document Type","No.");
+        TRANSFERFIELDS(RE_SalesHeader,FALSE);
+        // *** START MIN° wz.ak 16.11.2006
+        MODIFY;
+      END ELSE
+        DimMgt.SaveTempDim(FieldNumber,ShortcutDimCode);
+    END;
+
+    PROCEDURE ShippedSalesLinesExist@22() : Boolean;
+    BEGIN
+      SalesLine.RESET;
+      SalesLine.SETRANGE("Document Type","Document Type");
+      SalesLine.SETRANGE("Document No.","No.");
+      SalesLine.SETFILTER("Quantity Shipped",'<>0');
+      EXIT(SalesLine.FINDFIRST);
+    END;
+
+    PROCEDURE ReturnReceiptExist@5800() : Boolean;
+    BEGIN
+      SalesLine.RESET;
+      SalesLine.SETRANGE("Document Type","Document Type");
+      SalesLine.SETRANGE("Document No.","No.");
+      SalesLine.SETFILTER("Return Qty. Received",'<>0');
+      EXIT(SalesLine.FINDFIRST);
+    END;
+
+    LOCAL PROCEDURE DeleteSalesLines@20();
+    BEGIN
+      IF SalesLine.FINDFIRST THEN
+        REPEAT
+          SalesLine.SuspendStatusCheck(TRUE);
+          SalesLine.DELETE(TRUE);
+        UNTIL SalesLine.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE ClearItemAssgntSalesFilter@17(VAR TempItemChargeAssgntSales@1000 : Record 5809);
+    BEGIN
+      TempItemChargeAssgntSales.SETRANGE("Document Line No.");
+      TempItemChargeAssgntSales.SETRANGE("Applies-to Doc. Type");
+      TempItemChargeAssgntSales.SETRANGE("Applies-to Doc. No.");
+      TempItemChargeAssgntSales.SETRANGE("Applies-to Doc. Line No.");
+    END;
+
+    PROCEDURE CheckCustomerCreated@18(Prompt@1000 : Boolean) : Boolean;
+    VAR
+      Cont@1001 : Record 5050;
+    BEGIN
+      IF ("Bill-to Customer No." <> '') AND ("Sell-to Customer No." <> '') THEN
+        EXIT(TRUE);
+
+      IF Prompt THEN
+        IF NOT CONFIRM(Text035,TRUE) THEN
+          EXIT(FALSE);
+
+      IF "Sell-to Customer No." = '' THEN BEGIN
+        TESTFIELD("Sell-to Contact No.");
+        TESTFIELD("Sell-to Customer Template Code");
+        Cont.GET("Sell-to Contact No.");
+        Cont.CreateCustomer("Sell-to Customer Template Code");
+        COMMIT;
+        GET("Document Type"::Quote,"No.");
+      END;
+
+      IF "Bill-to Customer No." = '' THEN BEGIN
+        TESTFIELD("Bill-to Contact No.");
+        TESTFIELD("Bill-to Customer Template Code");
+        Cont.GET("Bill-to Contact No.");
+        Cont.CreateCustomer("Bill-to Customer Template Code");
+        COMMIT;
+        GET("Document Type"::Quote,"No.");
+      END;
+
+      EXIT(("Bill-to Customer No." <> '') AND ("Sell-to Customer No." <> ''));
+    END;
+
+    PROCEDURE RecreateReservEntry@21(OldSalesLine@1000 : Record 37;NewSourceRefNo@1001 : Integer;ToTemp@1002 : Boolean);
+    BEGIN
+      IF ToTemp THEN BEGIN
+        CLEAR(ReservEntry);
+        ReservEntry.SETCURRENTKEY("Source ID","Source Ref. No.","Source Type","Source Subtype");
+        ReservEntry.SETRANGE("Source ID",OldSalesLine."Document No.");
+        ReservEntry.SETRANGE("Source Ref. No.",OldSalesLine."Line No.");
+        ReservEntry.SETRANGE("Source Type",DATABASE::"Sales Line");
+        ReservEntry.SETRANGE("Source Subtype",OldSalesLine."Document Type");
+        IF ReservEntry.FINDFIRST THEN
+          REPEAT
+            TempReservEntry := ReservEntry;
+            TempReservEntry.INSERT;
+          UNTIL ReservEntry.NEXT = 0;
+        IF NOT ReservEntry.ISEMPTY THEN
+          ReservEntry.DELETEALL;
+      END ELSE BEGIN
+        CLEAR(TempReservEntry);
+        TempReservEntry.SETCURRENTKEY("Source ID","Source Ref. No.","Source Type","Source Subtype");
+        TempReservEntry.SETRANGE("Source Type",DATABASE::"Sales Line");
+        TempReservEntry.SETRANGE("Source Subtype",OldSalesLine."Document Type");
+        TempReservEntry.SETRANGE("Source ID",OldSalesLine."Document No.");
+        TempReservEntry.SETRANGE("Source Ref. No.",OldSalesLine."Line No.");
+        IF TempReservEntry.FINDFIRST THEN
+          REPEAT
+            ReservEntry := TempReservEntry;
+            ReservEntry."Source Ref. No." := NewSourceRefNo;
+            ReservEntry.INSERT;
+          UNTIL TempReservEntry.NEXT = 0;
+        IF NOT TempReservEntry.ISEMPTY THEN
+          TempReservEntry.DELETEALL;
+      END;
+    END;
+
+    PROCEDURE RecreateReqLine@33(OldSalesLine@1000 : Record 37;NewSourceRefNo@1001 : Integer;ToTemp@1002 : Boolean);
+    VAR
+      ReqLine@1003 : Record 246;
+    BEGIN
+      IF ToTemp THEN BEGIN
+        ReqLine.SETCURRENTKEY("Order Promising ID","Order Promising Line ID","Order Promising Line No.");
+        ReqLine.SETRANGE("Order Promising ID",OldSalesLine."Document No.");
+        ReqLine.SETRANGE("Order Promising Line ID",OldSalesLine."Line No.");
+        IF ReqLine.FINDFIRST THEN
+          REPEAT
+            TempReqLine := ReqLine;
+            TempReqLine.INSERT;
+          UNTIL ReqLine.NEXT = 0;
+        IF NOT ReqLine.ISEMPTY THEN
+          ReqLine.DELETEALL;
+      END ELSE BEGIN
+        CLEAR(TempReqLine);
+        TempReqLine.SETCURRENTKEY("Order Promising ID","Order Promising Line ID","Order Promising Line No.");
+        TempReqLine.SETRANGE("Order Promising ID",OldSalesLine."Document No.");
+        TempReqLine.SETRANGE("Order Promising Line ID",OldSalesLine."Line No.");
+        IF TempReqLine.FINDFIRST THEN
+          REPEAT
+            ReqLine := TempReqLine;
+            ReqLine."Order Promising Line ID" := NewSourceRefNo;
+            ReqLine.INSERT;
+          UNTIL TempReqLine.NEXT = 0;
+        IF NOT TempReqLine.ISEMPTY THEN
+          TempReqLine.DELETEALL;
+      END;
+    END;
+
+    PROCEDURE UpdateSellToCont@24(CustomerNo@1000 : Code[20]);
+    VAR
+      ContBusRel@1003 : Record 5054;
+      Cust@1004 : Record 18;
+    BEGIN
+      IF Cust.GET(CustomerNo) THEN BEGIN
+        IF Cust."Primary Contact No." <> '' THEN
+          "Sell-to Contact No." := Cust."Primary Contact No."
+        ELSE BEGIN
+          ContBusRel.RESET;
+          ContBusRel.SETCURRENTKEY("Link to Table","No.");
+          ContBusRel.SETRANGE("Link to Table",ContBusRel."Link to Table"::Customer);
+          ContBusRel.SETRANGE("No.","Sell-to Customer No.");
+          IF ContBusRel.FINDFIRST THEN
+            "Sell-to Contact No." := ContBusRel."Contact No.";
+        END;
+        "Sell-to Contact" := Cust.Contact;
+      END;
+    END;
+
+    PROCEDURE UpdateBillToCont@27(CustomerNo@1000 : Code[20]);
+    VAR
+      ContBusRel@1003 : Record 5054;
+      Cust@1001 : Record 18;
+    BEGIN
+      IF Cust.GET(CustomerNo) THEN BEGIN
+        IF Cust."Primary Contact No." <> '' THEN
+          "Bill-to Contact No." := Cust."Primary Contact No."
+        ELSE BEGIN
+          ContBusRel.RESET;
+          ContBusRel.SETCURRENTKEY("Link to Table","No.");
+          ContBusRel.SETRANGE("Link to Table",ContBusRel."Link to Table"::Customer);
+          ContBusRel.SETRANGE("No.","Bill-to Customer No.");
+          IF ContBusRel.FINDFIRST THEN
+            "Bill-to Contact No." := ContBusRel."Contact No.";
+        END;
+        "Bill-to Contact" := Cust.Contact;
+      END;
+    END;
+
+    PROCEDURE UpdateSellToCust@25(ContactNo@1002 : Code[20]);
+    VAR
+      ContBusinessRelation@1007 : Record 5054;
+      Customer@1006 : Record 18;
+      Cont@1005 : Record 5050;
+      CustTemplate@1004 : Record 5105;
+      ContComp@1003 : Record 5050;
+    BEGIN
+      IF Cont.GET(ContactNo) THEN
+        "Sell-to Contact No." := Cont."No."
+      ELSE BEGIN
+        "Sell-to Contact" := '';
+        EXIT;
+      END;
+
+      ContBusinessRelation.RESET;
+      ContBusinessRelation.SETCURRENTKEY("Link to Table","Contact No.");
+      ContBusinessRelation.SETRANGE("Link to Table",ContBusinessRelation."Link to Table"::Customer);
+      ContBusinessRelation.SETRANGE("Contact No.",Cont."Company No.");
+      IF ContBusinessRelation.FINDFIRST THEN BEGIN
+        IF ("Sell-to Customer No." <> '') AND
+           ("Sell-to Customer No." <> ContBusinessRelation."No.")
+        THEN
+          ERROR(Text037,Cont."No.",Cont.Name,"Sell-to Customer No.")
+        ELSE IF "Sell-to Customer No." = '' THEN BEGIN
+          SkipSellToContact := TRUE;
+          VALIDATE("Sell-to Customer No.",ContBusinessRelation."No.");
+          SkipSellToContact := FALSE;
+        END;
+      END ELSE BEGIN
+        IF "Document Type" = "Document Type"::Quote THEN BEGIN
+          Cont.TESTFIELD("Company No.");
+          ContComp.GET(Cont."Company No.");
+          "Sell-to Customer Name" := ContComp."Company Name";
+          "Sell-to Customer Name 2" := ContComp."Name 2";
+          "Ship-to Name" := ContComp."Company Name";
+          "Ship-to Name 2" := ContComp."Name 2";
+          "Ship-to Address" := ContComp.Address;
+          "Ship-to Address 2" := ContComp."Address 2";
+          "Ship-to City" := ContComp.City;
+          "Ship-to Post Code" := ContComp."Post Code";
+          "Ship-to County" := ContComp.County;
+          VALIDATE("Ship-to Country Code",ContComp."Country Code");
+          IF ("Sell-to Customer Template Code" = '') AND (NOT CustTemplate.ISEMPTY) THEN
+            VALIDATE("Sell-to Customer Template Code",Cont.FindCustomerTemplate);
+        END ELSE
+          ERROR(Text039,Cont."No.",Cont.Name);
+      END;
+
+      IF Cont.Type = Cont.Type::Person THEN
+        "Sell-to Contact" := Cont.Name
+      ELSE
+        IF Customer.GET("Sell-to Customer No.") THEN
+          "Sell-to Contact" := Customer.Contact
+        ELSE
+          "Sell-to Contact" := '';
+
+      IF "Document Type" = "Document Type"::Quote THEN BEGIN
+        IF (Customer.GET("Sell-to Customer No.") OR Customer.GET(ContBusinessRelation."No."))  THEN BEGIN
+          IF (Customer."Copy Sell-to Addr. to Qte From" = Customer."Copy Sell-to Addr. to Qte From"::Company) THEN BEGIN
+            Cont.TESTFIELD("Company No.");
+            Cont.GET(Cont."Company No.");
+          END;
+        END ELSE BEGIN
+          Cont.TESTFIELD("Company No.");
+          Cont.GET(Cont."Company No.");
+      END;
+        "Sell-to Address" := Cont.Address;
+        "Sell-to Address 2" := Cont."Address 2";
+        "Sell-to City" := Cont.City;
+        "Sell-to Post Code" := Cont."Post Code";
+        "Sell-to County" := Cont.County;
+        "Sell-to Country Code" := Cont."Country Code";
+      END;
+      IF ("Sell-to Customer No." = "Bill-to Customer No.") OR
+         ("Bill-to Customer No." = '')
+      THEN
+        VALIDATE("Bill-to Contact No.","Sell-to Contact No.");
+    END;
+
+    PROCEDURE UpdateBillToCust@26(ContactNo@1000 : Code[20]);
+    VAR
+      ContBusinessRelation@1005 : Record 5054;
+      Cust@1004 : Record 18;
+      Cont@1003 : Record 5050;
+      CustTemplate@1002 : Record 5105;
+      ContComp@1001 : Record 5050;
+    BEGIN
+      IF Cont.GET(ContactNo) THEN BEGIN
+        "Bill-to Contact No." := Cont."No.";
+        IF Cont.Type = Cont.Type::Person THEN
+          "Bill-to Contact" := Cont.Name
+        ELSE
+          IF Cust.GET("Bill-to Customer No.") THEN
+            "Bill-to Contact" := Cust.Contact
+          ELSE
+            "Bill-to Contact" := '';
+      END ELSE BEGIN
+          "Bill-to Contact" := '';
+          EXIT;
+        END;
+
+      ContBusinessRelation.RESET;
+      ContBusinessRelation.SETCURRENTKEY("Link to Table","Contact No.");
+      ContBusinessRelation.SETRANGE("Link to Table",ContBusinessRelation."Link to Table"::Customer);
+      ContBusinessRelation.SETRANGE("Contact No.",Cont."Company No.");
+      IF ContBusinessRelation.FINDFIRST THEN BEGIN
+        IF "Bill-to Customer No." = '' THEN BEGIN
+          SkipBillToContact := TRUE;
+          VALIDATE("Bill-to Customer No.",ContBusinessRelation."No.");
+          SkipBillToContact := FALSE;
+          "Bill-to Customer Template Code" := '';
+        END ELSE
+          IF "Bill-to Customer No." <> ContBusinessRelation."No." THEN
+            ERROR(Text037,Cont."No.",Cont.Name,"Bill-to Customer No.");
+      END ELSE BEGIN
+        IF "Document Type" = "Document Type"::Quote THEN BEGIN
+          Cont.TESTFIELD("Company No.");
+          ContComp.GET(Cont."Company No.");
+          "Bill-to Name" := ContComp."Company Name";
+          "Bill-to Name 2" := ContComp."Name 2";
+          "Bill-to Address" := ContComp.Address;
+          "Bill-to Address 2" := ContComp."Address 2";
+          "Bill-to City" := ContComp.City;
+          "Bill-to Post Code" := ContComp."Post Code";
+          "Bill-to County" := ContComp.County;
+          "Bill-to Country Code" := ContComp."Country Code";
+          "VAT Registration No." := ContComp."VAT Registration No.";
+
+      // START CDLS1 - 24.10.2005 - MV - added code in triggers
+          "VAT Reg. No. SK" := ContComp."VAT Reg. No. SK";
+      // STOP CDLS1 - 24.10.2005 - MV - added code in triggers
+
+          "Registration No." := ContComp."Registration No.";
+          VALIDATE("Currency Code",ContComp."Currency Code");
+          "Language Code" := ContComp."Language Code";
+          IF ("Bill-to Customer Template Code" = '') AND (NOT CustTemplate.ISEMPTY) THEN
+            VALIDATE("Bill-to Customer Template Code",Cont.FindCustomerTemplate);
+        END ELSE
+          ERROR(Text039,Cont."No.",Cont.Name);
+      END;
+    END;
+
+    PROCEDURE GetShippingTime@23(CalledByFieldNo@1000 : Integer);
+    BEGIN
+      IF (CalledByFieldNo <> CurrFieldNo) AND (CurrFieldNo <> 0) THEN
+        EXIT;
+
+      IF ShippingAgentService.GET("Shipping Agent Code","Shipping Agent Service Code") THEN
+        "Shipping Time" := ShippingAgentService."Shipping Time"
+      ELSE BEGIN
+        GetCust("Sell-to Customer No.");
+        "Shipping Time" := Cust."Shipping Time"
+      END;
+      IF NOT (CalledByFieldNo IN [FIELDNO("Shipping Agent Code"),FIELDNO("Shipping Agent Service Code")]) THEN
+        VALIDATE("Shipping Time");
+    END;
+
+    PROCEDURE CheckCreditMaxBeforeInsert@28();
+    VAR
+      SalesHeader@1001 : Record 36;
+      ContBusinessRelation@1002 : Record 5054;
+      Cont@1003 : Record 5050;
+      CustCheckCreditLimit@1000 : Codeunit 312;
+    BEGIN
+      IF HideCreditCheckDialogue THEN
+        EXIT;
+      IF GETFILTER("Sell-to Customer No.") <> '' THEN BEGIN
+        IF GETRANGEMIN("Sell-to Customer No.") = GETRANGEMAX("Sell-to Customer No.") THEN BEGIN
+          SalesHeader."Bill-to Customer No." := GETRANGEMIN("Sell-to Customer No.");
+          CustCheckCreditLimit.SalesHeaderCheck(SalesHeader);
+        END
+      END ELSE
+        IF GETFILTER("Sell-to Contact No.") <> '' THEN
+          IF GETRANGEMIN("Sell-to Contact No.") = GETRANGEMAX("Sell-to Contact No.") THEN BEGIN
+            Cont.GET(GETRANGEMIN("Sell-to Contact No."));
+            ContBusinessRelation.RESET;
+            ContBusinessRelation.SETCURRENTKEY("Link to Table","No.");
+            ContBusinessRelation.SETRANGE("Link to Table",ContBusinessRelation."Link to Table"::Customer);
+            ContBusinessRelation.SETRANGE("Contact No.",Cont."Company No.");
+            IF ContBusinessRelation.FINDFIRST THEN BEGIN
+              SalesHeader."Bill-to Customer No." := ContBusinessRelation."No.";
+              CustCheckCreditLimit.SalesHeaderCheck(SalesHeader);
+            END;
+          END;
+    END;
+
+    PROCEDURE CreateInvtPutAwayPick@29();
+    VAR
+      WhseRequest@1000 : Record 5765;
+    BEGIN
+      TESTFIELD(Status,Status::Released);
+
+      WhseRequest.RESET;
+      WhseRequest.SETCURRENTKEY("Source Document","Source No.");
+      CASE "Document Type" OF
+        "Document Type"::Order:
+          WhseRequest.SETRANGE("Source Document",WhseRequest."Source Document"::"Sales Order");
+        "Document Type"::"Return Order":
+          WhseRequest.SETRANGE("Source Document",WhseRequest."Source Document"::"Sales Return Order");
+      END;
+      WhseRequest.SETRANGE("Source No.","No.");
+      REPORT.RUNMODAL(REPORT::"Create Invt. Put-away / Pick",TRUE,FALSE,WhseRequest);
+    END;
+
+    PROCEDURE CreateTodo@30();
+    VAR
+      Todo@1000 : TEMPORARY Record 5080;
+    BEGIN
+      TESTFIELD("Sell-to Contact No.");
+
+      IF NOT Todo.ISEMPTY THEN
+        Todo.DELETEALL;
+      Todo.INIT;
+      Todo.VALIDATE("Contact No.", "Sell-to Contact No.");
+      Todo.SETRANGE("Contact No.","Sell-to Contact No.");
+      IF "Salesperson Code" <> '' THEN BEGIN
+        Todo."Salesperson Code" := "Salesperson Code";
+        Todo.SETRANGE("Salesperson Code","Salesperson Code");
+      END;
+      IF "Campaign No." <> '' THEN BEGIN
+        Todo."Campaign No." := "Campaign No.";
+        Todo.SETRANGE("Campaign No.","Campaign No.");
+      END;
+      Todo.Duration := 1440 * 1000 * 60;
+      Todo.Date := TODAY;
+      Todo.INSERT;
+      FORM.RUNMODAL(FORM::"Create To-do",Todo);
+    END;
+
+    LOCAL PROCEDURE UpdateShipToAddress@31();
+    BEGIN
+      IF "Document Type" IN ["Document Type"::"Return Order", "Document Type"::"Credit Memo"] THEN BEGIN
+        IF ("Location Code" <> '') THEN BEGIN
+          Location.GET("Location Code");
+          "Ship-to Name" := Location.Name;
+          "Ship-to Name 2" := Location."Name 2";
+          "Ship-to Address" := Location.Address;
+          "Ship-to Address 2" := Location."Address 2";
+          "Ship-to City" := Location.City;
+          "Ship-to Post Code" := Location."Post Code";
+          "Ship-to County" := Location.County;
+          "Ship-to Country Code" := Location."Country Code";
+          "Ship-to Contact" := Location.Contact;
+        END ELSE BEGIN
+          CompanyInfo.GET;
+          "Ship-to Code" := '';
+          "Ship-to Name" := CompanyInfo."Ship-to Name";
+          "Ship-to Name 2" := CompanyInfo."Ship-to Name 2";
+          "Ship-to Address" := CompanyInfo."Ship-to Address";
+          "Ship-to Address 2" := CompanyInfo."Ship-to Address 2";
+          "Ship-to City" := CompanyInfo."Ship-to City";
+          "Ship-to Post Code" := CompanyInfo."Ship-to Post Code";
+          "Ship-to County" := CompanyInfo."Ship-to County";
+          "Ship-to Country Code" := CompanyInfo."Ship-to Country Code";
+          "Ship-to Contact" := CompanyInfo."Ship-to Contact";
+        END;
+        "VAT Country Code" := "Sell-to Country Code";
+      END;
+    END;
+
+    PROCEDURE ShowDocDim@32();
+    VAR
+      DocDim@1000 : Record 357;
+      DocDims@1001 : Form 546;
+    BEGIN
+      DocDim.SETRANGE("Table ID",DATABASE::"Sales Header");
+      DocDim.SETRANGE("Document Type","Document Type");
+      DocDim.SETRANGE("Document No.","No.");
+      DocDim.SETRANGE("Line No.",0);
+      DocDims.SETTABLEVIEW(DocDim);
+      DocDims.RUNMODAL;
+      GET("Document Type","No.");
+    END;
+
+    PROCEDURE CheckLocation@34(ShowError@1002 : Boolean) : Boolean;
+    VAR
+      SalesLine@1000 : Record 37;
+      SalesLine2@1001 : Record 37;
+    BEGIN
+      IF NOT("Shipping Advice" = "Shipping Advice"::Complete) THEN
+        EXIT(FALSE);
+
+      SalesLine.SETRANGE("Document Type","Document Type");
+      SalesLine.SETRANGE("Document No.","No.");
+      SalesLine.SETRANGE(Type,SalesLine.Type::Item);
+      IF SalesLine.FINDFIRST THEN BEGIN
+        SalesLine2.COPYFILTERS(SalesLine);
+        SalesLine2.SETCURRENTKEY("Document Type","Document No.","Location Code");
+        SalesLine2.SETFILTER("Location Code",'<> %1',SalesLine."Location Code");
+        IF SalesLine2.FINDFIRST THEN BEGIN
+          IF ShowError THEN
+            ERROR(Text050,FIELDCAPTION("Shipping Advice"),"Shipping Advice","No.",SalesLine.Type);
+          EXIT(TRUE);
+        END;
+      END;
+    END;
+
+    PROCEDURE SetAmountToApply@35(AppliesToDocNo@1000 : Code[20];CustomerNo@1001 : Code[20]);
+    VAR
+      CustLedgEntry@1002 : Record 21;
+    BEGIN
+      CustLedgEntry.SETCURRENTKEY("Document No.","Document Type","Customer No.");
+      CustLedgEntry.SETRANGE("Document No.",AppliesToDocNo);
+      CustLedgEntry.SETRANGE("Customer No.",CustomerNo);
+      CustLedgEntry.SETRANGE(Open,TRUE);
+      IF CustLedgEntry.FINDFIRST THEN BEGIN
+        IF CustLedgEntry."Amount to Apply" = 0 THEN  BEGIN
+          CustLedgEntry.CALCFIELDS("Remaining Amount");
+          CustLedgEntry."Amount to Apply" := CustLedgEntry."Remaining Amount";
+        END ELSE
+          CustLedgEntry."Amount to Apply" := 0;
+        CODEUNIT.RUN(CODEUNIT::"Cust. Entry-Edit",CustLedgEntry);
+      END;
+    END;
+
+    PROCEDURE "--CDL-----"@1000000001();
+    BEGIN
+    END;
+
+    PROCEDURE CheckAdvCurrency@1000000000(Header@1000000001 : Record 36);
+    VAR
+      lAdvLink@1000000000 : Record 88911;
+    BEGIN
+      // START CDLZA - 5.2.2007 - ZJ: new function
+      WITH Header DO
+      BEGIN
+        lAdvLink.SETRANGE("Link Type",lAdvLink."Link Type"::Sale);
+        lAdvLink.SETRANGE(Posted,FALSE);
+        lAdvLink.SETRANGE("Document Type",Header."Document Type");
+        lAdvLink.SETRANGE("Document No.",Header."No.");
+        IF lAdvLink.FINDFIRST THEN
+        REPEAT
+          lAdvLink.CheckDocumentCurrency(lAdvLink);
+        UNTIL lAdvLink.NEXT = 0;
+      END;
+      // STOP CDLZA - 5.2.2007 - ZJ:
+    END;
+
+    PROCEDURE SellToAdressH@1220015(pCustomer@1220000 : Record 18;pVATTaxDate@1220001 : Date);
+    VAR
+      lrecHistoryAdress@1220002 : Record 84749;
+    BEGIN
+
+      //START - WG - 07.06.2012 - RCH - M3959 - Customer Adress History
+      IF pVATTaxDate <> 0D THEN BEGIN
+         lrecHistoryAdress.RESET;
+         lrecHistoryAdress.SETRANGE("No.",pCustomer."No.");
+         lrecHistoryAdress.SETFILTER("Valid To",'>%1',pVATTaxDate);
+         IF lrecHistoryAdress.FINDFIRST THEN BEGIN
+            "Sell-to Customer Name" := lrecHistoryAdress.Name;
+            "Sell-to Customer Name 2" := lrecHistoryAdress."Name 2";
+            "Sell-to Address" := lrecHistoryAdress.Address;
+            "Sell-to Address 2" := lrecHistoryAdress."Address 2";
+            "Sell-to City" := lrecHistoryAdress.City;
+            "Sell-to Country Code" := lrecHistoryAdress."Country Code";
+            "Sell-to Post Code" := lrecHistoryAdress."Post Code";
+      //START - WG - 27.07.2012 - RCH - M3959 - Customer Adress History
+            END
+         ELSE BEGIN
+            "Sell-to Customer Name" := pCustomer.Name;
+            "Sell-to Customer Name 2" := pCustomer."Name 2";
+            "Sell-to Address" := pCustomer.Address;
+            "Sell-to Address 2" := pCustomer."Address 2";
+            "Sell-to City" := pCustomer.City;
+            "Sell-to Country Code" := pCustomer."Country Code";
+            "Sell-to Post Code" := pCustomer."Post Code";
+            END;
+         END
+      ELSE BEGIN
+         "Sell-to Customer Name" := pCustomer.Name;
+         "Sell-to Customer Name 2" := pCustomer."Name 2";
+         "Sell-to Address" := pCustomer.Address;
+         "Sell-to Address 2" := pCustomer."Address 2";
+         "Sell-to City" := pCustomer.City;
+         "Sell-to Country Code" := pCustomer."Country Code";
+         "Sell-to Post Code" := pCustomer."Post Code";
+         END;
+      //STOP - WG - 27.07.2012 - RCH - M3959 - Customer Adress History
+      //STOP - WG - 07.06.2012 - RCH - M3959 - Customer Adress History
+    END;
+
+    PROCEDURE BillToAdressH@1220016(pCustomer@1220001 : Record 18;pVATTaxDate@1220000 : Date);
+    VAR
+      lrecHistoryAdress@1220002 : Record 84749;
+    BEGIN
+
+      //START - WG - 07.06.2012 - RCH - M3959 - Customer Adress History
+      IF pVATTaxDate <> 0D THEN BEGIN
+         lrecHistoryAdress.RESET;
+         lrecHistoryAdress.SETRANGE("No.",pCustomer."No.");
+         lrecHistoryAdress.SETFILTER("Valid To",'>%1',pVATTaxDate);
+         IF lrecHistoryAdress.FINDFIRST THEN BEGIN
+            "Bill-to Name" := lrecHistoryAdress.Name;
+            "Bill-to Name 2" := lrecHistoryAdress."Name 2";
+            "Bill-to Address" := lrecHistoryAdress.Address;
+            "Bill-to Address 2" := lrecHistoryAdress."Address 2";
+            "Bill-to City" := lrecHistoryAdress.City;
+            "Bill-to Country Code" := lrecHistoryAdress."Country Code";
+            "Bill-to Post Code" := lrecHistoryAdress."Post Code";
+            "VAT Registration No." := lrecHistoryAdress."VAT Registration No.";
+            "Registration No." := lrecHistoryAdress."Registration No.";
+            "VAT Reg. No. SK" := lrecHistoryAdress."VAT Reg. No. SK";
+      //START - WG - 29.01.2013 - MP - repair functionality Customer Adress History
+      ////START - WG - 27.07.2012 - RCH - M3959 - Customer Adress History
+      //      END
+      //   ELSE BEGIN
+      //      "Sell-to Customer Name" := pCustomer.Name;
+      //      "Sell-to Customer Name 2" := pCustomer."Name 2";
+      //      "Sell-to Address" := pCustomer.Address;
+      //      "Sell-to Address 2" := pCustomer."Address 2";
+      //      "Sell-to City" := pCustomer.City;
+      //      "Sell-to Country Code" := pCustomer."Country Code";
+      //      "Sell-to Post Code" := pCustomer."Post Code";
+      //      END;
+      //   END
+      //ELSE BEGIN
+      //   "Sell-to Customer Name" := pCustomer.Name;
+      //   "Sell-to Customer Name 2" := pCustomer."Name 2";
+      //   "Sell-to Address" := pCustomer.Address;
+      //   "Sell-to Address 2" := pCustomer."Address 2";
+      //   "Sell-to City" := pCustomer.City;
+      //   "Sell-to Country Code" := pCustomer."Country Code";
+      //   "Sell-to Post Code" := pCustomer."Post Code";
+      //   END;
+      ////STOP - WG - 27.07.2012 - RCH - M3959 - Customer Adress History
+        END ELSE BEGIN
+          "Bill-to Name" := pCustomer.Name;
+          "Bill-to Name 2" := pCustomer."Name 2";
+          "Bill-to Address" := pCustomer.Address;
+          "Bill-to Address 2" := pCustomer."Address 2";
+          "Bill-to City" := pCustomer.City;
+          "Bill-to Country Code" := pCustomer."Country Code";
+          "Bill-to Post Code" := pCustomer."Post Code";
+        END;
+      END ELSE BEGIN
+        "Bill-to Name" := pCustomer.Name;
+        "Bill-to Name 2" := pCustomer."Name 2";
+        "Bill-to Address" := pCustomer.Address;
+        "Bill-to Address 2" := pCustomer."Address 2";
+        "Bill-to City" := pCustomer.City;
+        "Bill-to Country Code" := pCustomer."Country Code";
+        "Bill-to Post Code" := pCustomer."Post Code";
+      END;
+      //STOP - WG - 29.01.2013 - MP - repair functionality Customer Adress History
+      //STOP - WG - 07.06.2012 - RCH - M3959 - Customer Adress History
+    END;
+
+    PROCEDURE UpdateLineTranslations@1220012();
+    VAR
+      lrecSalesLine@1220000 : Record 37;
+      lrecSalesLineTransl@1220001 : Record 84824;
+      lrecCountry@1220002 : Record 9;
+    BEGIN
+      IF "VAT Settlement Country Code" <> '' THEN BEGIN
+        lrecCountry.GET("VAT Settlement Country Code");
+        IF lrecCountry.Sprachcode = '' THEN BEGIN
+          lrecSalesLineTransl.RESET;
+          lrecSalesLineTransl.SETRANGE("Document Type", "Document Type");
+          lrecSalesLineTransl.SETRANGE("Document No.", "No.");
+          IF NOT lrecSalesLineTransl.ISEMPTY THEN
+            lrecSalesLineTransl.DELETEALL;
+          EXIT;
+        END;
+
+        lrecSalesLine.RESET;
+        lrecSalesLine.SETRANGE("Document Type", "Document Type");
+        lrecSalesLine.SETRANGE("Document No.", "No.");
+        lrecSalesLine.SETRANGE(Type, lrecSalesLine.Type::"G/L Account", lrecSalesLine.Type::"Charge (Item)");
+        IF lrecSalesLine.FINDSET THEN REPEAT
+          lrecSalesLineTransl.SetSalesLine(Rec, lrecSalesLine);
+        UNTIL lrecSalesLine.NEXT = 0;
+      END ELSE BEGIN
+        lrecSalesLineTransl.RESET;
+        lrecSalesLineTransl.SETRANGE("Document Type", "Document Type");
+        lrecSalesLineTransl.SETRANGE("Document No.", "No.");
+        IF NOT lrecSalesLineTransl.ISEMPTY THEN
+          lrecSalesLineTransl.DELETEALL;
+      END;
+    END;
+
+    PROCEDURE CheckAndSetLocalReverseCharge@1220034(inCreateStdTextLine@1220005 : Boolean) : Boolean;
+    VAR
+      lrecCust@1220000 : Record 18;
+      lrecSalesLine@1220002 : Record 37;
+      lrecCountry@1220004 : Record 9;
+      locLineNo@1220003 : Integer;
+      lcuPostCentros@1220001 : Codeunit 84402;
+      lrecCustVATRegNo@1220006 : Record 84437;
+      InsertVATCauseText@1220008 : Boolean;
+      VATCauseSetupL@1220007 : Record 61064;
+    BEGIN
+      lrecCust.GET("Sell-to Customer No.");
+
+      // NAV-17514+
+      IF inCreateStdTextLine AND Invoice THEN BEGIN
+        IF VATCauseSetupL.GetStandardText(Rec, VATCauseSetupL) THEN BEGIN
+          VATCauseSetupL.CreateSalesLine(Rec, VATCauseSetupL);
+          InsertVATCauseText := TRUE;
+        END;
+      END;
+      // NAV-17514-
+
+
+      //START - WG - 02.11.2015 - RCH - NAV-13779
+      //IF "VAT Settlement Country Code" <> lrecCust."Country Code" THEN
+      //  EXIT;
+      IF "VAT Settlement Country Code" <> lrecCust."Country Code" THEN BEGIN
+        IF lrecCustVATRegNo.FindCustomerVATRegNo(lrecCust."No.","VAT Settlement Country Code","Posting Date") = '' THEN BEGIN
+          EXIT;
+        END ELSE BEGIN
+          //START - WG - 23.11.2015 - RCH - NAV-15428
+          //Invoice := TRUE;
+          //STOP - WG - 23.11.2015 - RCH - NAV-15428
+        END;
+      END;
+      //STOP - WG - 02.11.2015 - RCH - NAV-13779
+
+      lrecCountry.GET("VAT Settlement Country Code");
+      //START - WG - 20.01.2016 - MP - NAV-16123
+      //IF lrecCountry."VAT Reg. No. Loc. Rev.Chrg." <> '' THEN BEGIN
+      IF (lrecCountry."VAT Reg. No. Loc. Rev.Chrg." <> '') AND
+         ("VAT Bus. Posting Group"  = lrecCountry."VAT Bus. Post. Group Rev.Chrg.") THEN BEGIN
+      //STOP - WG - 20.01.2016 - MP - NAV-16123
+        lrecCountry.TESTFIELD("Std Text Loc. Rev. Chrg.");
+
+        //START - WG - 27.01.2016 - MP - NAV-16210
+        IF Invoice THEN
+        //STOP - WG - 27.01.2016 - MP - NAV-16210
+          "Company VAT Registration No." := lrecCountry."VAT Reg. No. Loc. Rev.Chrg.";
+
+        // NAV-17514+
+        //IF inCreateStdTextLine AND Invoice THEN BEGIN
+        IF inCreateStdTextLine AND Invoice AND (NOT InsertVATCauseText) THEN BEGIN
+        // NAV-17514-
+          // === insert text for local reverse charge to lines ===
+          lrecSalesLine.RESET;
+          lrecSalesLine.SETRANGE("Document Type", "Document Type");
+          lrecSalesLine.SETRANGE("Document No.", "No.");
+          IF NOT lrecSalesLine.FINDLAST THEN
+            CLEAR(lrecSalesLine);
+          lcuPostCentros.FillSalesLineTexts(Rec, lrecSalesLine."Line No." + 10000, lrecCountry."Std Text Loc. Rev. Chrg.");
+        END;
+
+        EXIT(TRUE);
+      END;
+
+      EXIT(FALSE);
+    END;
+
+    PROCEDURE IsOrderToInvForCustProdType@1220032(inCustProductTypeFilter@1220000 : Text[30]) : Boolean;
+    VAR
+      lcuContractMgt@1220001 : Codeunit 61034;
+    BEGIN
+      IF inCustProductTypeFilter = '' THEN
+        EXIT(TRUE);
+
+      EXIT(inCustProductTypeFilter = lcuContractMgt.GetContactSegment("Sell-to Customer No."));
+    END;
+
+    PROCEDURE FilterOrderToInvForCustProdTyp@1220036(VAR parSalesHead@1220000 : Record 36;inCustProductType@1220001 : Text[30]);
+    BEGIN
+      parSalesHead.CLEARMARKS;
+
+      IF inCustProductType <> '' THEN BEGIN
+        IF parSalesHead.FINDSET THEN REPEAT
+          IF parSalesHead.IsOrderToInvForCustProdType(inCustProductType) THEN
+            parSalesHead.MARK(TRUE);
+        UNTIL parSalesHead.NEXT = 0;
+        parSalesHead.MARKEDONLY(TRUE);
+      END;
+    END;
+
+    PROCEDURE ShowOrderToInvForCustProdType@1220035(VAR parSalesHead@1220001 : Record 36;inCustProductType@1220000 : Text[30]);
+    VAR
+      lfrmSalesOrders@1220002 : Form 50003;
+    BEGIN
+      FilterOrderToInvForCustProdTyp(parSalesHead, inCustProductType);
+
+      CLEAR(lfrmSalesOrders);
+      lfrmSalesOrders.EDITABLE(FALSE);
+      lfrmSalesOrders.LOOKUPMODE(FALSE);
+      lfrmSalesOrders.SETTABLEVIEW(parSalesHead);
+      lfrmSalesOrders.RUNMODAL;
+    END;
+
+    PROCEDURE "---EISWZR---"@1106700001();
+    BEGIN
+    END;
+
+    PROCEDURE OptiToolStorno@1106700005();
+    VAR
+      t_ProtokollTable@1112400000 : Record 5010081;
+    BEGIN
+      IF "OptiTool Serial No." = 0 THEN
+        ERROR(Text1106700036);
+
+      t_ProtokollTable.GET("OptiTool Serial No.");
+      IF NOT t_ProtokollTable.DELETE THEN
+        ERROR(Text1106700037)
+      ELSE
+      "OptiTool Serial No." := 0;
+    END;
+
+    PROCEDURE KredLimPrüfen@1106700003();
+    VAR
+      t_Einricht@1106700025 : Record 5010011;
+      c_KredLimPrüfen@1106700024 : Codeunit 312;
+      Fenster@1106700023 : Dialog;
+      t_Debitor@1106700022 : Record 18;
+    BEGIN
+      t_Einricht.GET;
+      IF NOT t_Einricht."Order Release" THEN
+        EXIT;
+
+      IF "Bill-to Customer No." = '' THEN
+        ERROR(Text1106700033,FIELDCAPTION("Bill-to Customer No."));
+
+      t_Debitor.GET("Bill-to Customer No.");
+      //* Ist Kreditlimit überhaupt festgelegt ..
+      // *** START 09 wz.ak 101106
+      t_Debitor.CALCFIELDS("Credit Limit (LCY)");
+      // *** ENDE 09 wz.ak 101106
+      IF t_Debitor."Credit Limit (LCY)" = 0 THEN
+        EXIT;
+
+      t_Debitor.CALCFIELDS(t_Debitor."Balance (LCY)",t_Debitor."Balance Due (LCY)",
+                           t_Debitor."Shipped Not Invoiced",t_Debitor."Outstanding Orders");
+      CALCFIELDS("Amount Including VAT");
+
+      IF t_Debitor."Balance Due (LCY)" + t_Debitor."Outstanding Orders" +
+         t_Debitor."Shipped Not Invoiced" >
+         t_Debitor."Credit Limit (LCY)" THEN BEGIN
+        IF "Order Released at (Date)" = 0D THEN BEGIN
+        //* nur wenn noch nicht gesperrt war, ansonsten keine Prüfung mehr !!
+          "Credit Limit Exceeded" := TRUE;
+          "Cr. Limit Exceeded at (Date)" := WORKDATE;
+          "Cr. Limit Exceeded at (Time)" := TIME;
+          "Credit Limit Exceeded (by)" := USERID;
+          MODIFY;
+          COMMIT;
+        END;
+      END;
+    END;
+
+    PROCEDURE ÜbergabeOptiTool@1106700002();
+    BEGIN
+      TESTFIELD("Order created");
+      CALCFIELDS("Number of Lines");
+      IF "Number of Lines" = 0 THEN
+        ERROR(Text1106700034);
+
+      IF "OptiTool Serial No." <> 0 THEN BEGIN
+        IF CONFIRM(Text1106700035,TRUE) THEN BEGIN
+          f_VKKÜbergabe();
+          END;
+        END
+      ELSE
+        f_VKKÜbergabe();
+    END;
+
+    PROCEDURE FNK_VKZ_LfdNrOptitool_Aktual@1112400000();
+    VAR
+      LCL_RE_VKZ@1112400001 : Record 37;
+      LCL_INT_Zähler@1112400000 : Integer;
+      Text5010000@1112400002 : TextConst 'DEA=Fehler beim Aktualisieren von %1 in %2 vor der Datenaufbereitung für Optitool!';
+    BEGIN
+      LCL_RE_VKZ.RESET;
+      LCL_RE_VKZ.SETRANGE(LCL_RE_VKZ."Document Type", "Document Type");
+      LCL_RE_VKZ.SETRANGE(LCL_RE_VKZ."Document No.", "No.");
+      IF LCL_RE_VKZ.FINDFIRST THEN
+      BEGIN
+       LCL_INT_Zähler := 1;
+       REPEAT
+        LCL_RE_VKZ."Line No. (OptiTool)" := 10000 * LCL_INT_Zähler;
+        IF LCL_RE_VKZ.MODIFY = FALSE THEN
+         ERROR(Text5010000, LCL_RE_VKZ.FIELDNAME(LCL_RE_VKZ."Line No. (OptiTool)"), LCL_RE_VKZ.TABLENAME);
+        LCL_INT_Zähler := LCL_INT_Zähler + 1;
+       UNTIL LCL_RE_VKZ.NEXT = 0;
+      END;
+    END;
+
+    PROCEDURE f_VKKÜbergabe@1112400001();
+    VAR
+      t_ProtokollTable@1112400001 : Record 5010081;
+      LfdNr@1112400000 : Integer;
+    BEGIN
+      CALCFIELDS("Number of Lines");
+
+      t_ProtokollTable.RESET;
+
+      IF NOT t_ProtokollTable.FINDLAST THEN
+        LfdNr := 1
+      ELSE
+        LfdNr := t_ProtokollTable."Entry No." + 1;
+
+      IF "OptiTool Serial No." = 0 THEN BEGIN
+        t_ProtokollTable.INIT;
+        t_ProtokollTable."Entry No." := LfdNr;
+        t_ProtokollTable.INSERT;
+
+        "OptiTool Serial No." := t_ProtokollTable."Entry No.";
+        END
+      ELSE
+        t_ProtokollTable.GET("OptiTool Serial No.");
+
+      t_ProtokollTable."Order No." := "No.";
+      t_ProtokollTable."Delivery Date from" := "Shipment Date";
+      t_ProtokollTable."Delivery Date until" := "Latest Shipping Date";
+      t_ProtokollTable."Delivery Time from" := "Delivery Time from";
+      t_ProtokollTable."Delivery Time until" := "Delivery Time Until";
+      t_ProtokollTable."Delivery (Date)" := TODAY;
+      t_ProtokollTable."Delivery (Time)" := TIME;
+      t_ProtokollTable."Delivery by" := USERID;
+      t_ProtokollTable."Number of Lines" := "Number of Lines";
+      t_ProtokollTable.VALIDATE(t_ProtokollTable."Number of Transfers");
+      t_ProtokollTable.MODIFY;
+    END;
+
+    PROCEDURE FNK_AufgabeErstellen@1106700000() BO_Return : Boolean;
+    VAR
+      LCL_RE_UserSetup@1106700000 : Record 91;
+      LCL_RE_ToDo@1106700001 : Record 5080;
+      LCL_RE_ContBusRel@1106700003 : Record 5054;
+      LCL_RE_CommentLine@1106700002 : Record 5061;
+      LCL_CO_SalesPerson@1106700004 : Code[10];
+      LCL_DI_Dialog@1106700005 : Dialog;
+      LCL_TE_Bemerkung@1106700006 : Text[80];
+      LCL_DA_Startdatum@1106700007 : Date;
+      LCL_TI_Startzeit@1106700008 : Time;
+    BEGIN
+      IF LCL_RE_UserSetup.GET(USERID) THEN
+        IF LCL_RE_UserSetup."Salesperson Code" <> '' THEN
+          LCL_CO_SalesPerson := LCL_RE_UserSetup."Salesperson Code";
+
+      IF LCL_CO_SalesPerson <> '' THEN BEGIN
+        LCL_DA_Startdatum := TODAY;
+        LCL_TI_Startzeit  := TIME;
+        LCL_DI_Dialog.OPEN('Bemerkungstext #############1#\'+
+                           'Startdatum     #############2#\'+
+                           'Startzeit      #############3# ');
+        LCL_DI_Dialog.UPDATE(2,LCL_DA_Startdatum);
+        LCL_DI_Dialog.UPDATE(3,LCL_TI_Startzeit);
+        LCL_DI_Dialog.INPUT(1,LCL_TE_Bemerkung);
+        LCL_DI_Dialog.INPUT(2,LCL_DA_Startdatum);
+        LCL_DI_Dialog.INPUT(3,LCL_TI_Startzeit);
+        LCL_DI_Dialog.CLOSE;
+        LCL_RE_ToDo.INIT;
+        LCL_RE_ToDo.VALIDATE("Salesperson Code",LCL_CO_SalesPerson);
+        LCL_RE_ContBusRel.SETCURRENTKEY("Link to Table","No.");
+        LCL_RE_ContBusRel.SETRANGE("Link to Table",LCL_RE_ContBusRel."Link to Table"::Customer);
+        LCL_RE_ContBusRel.SETRANGE("No.","Sell-to Customer No.");
+        IF LCL_RE_ContBusRel.FINDFIRST THEN
+          LCL_RE_ToDo.VALIDATE("Contact No.",LCL_RE_ContBusRel."Contact No.");
+        LCL_RE_ToDo.Date := LCL_DA_Startdatum;
+        LCL_RE_ToDo."Start Time" := LCL_TI_Startzeit;
+        LCL_RE_ToDo.Duration := 180000000;
+        LCL_RE_ToDo.Description := STRSUBSTNO(Text50000,"No.","Sell-to Customer No.");
+        BO_Return := LCL_RE_ToDo.INSERT(TRUE);
+        IF BO_Return AND (LCL_TE_Bemerkung <> '') THEN BEGIN
+          LCL_RE_CommentLine.RESET;
+          LCL_RE_CommentLine.INIT;
+          LCL_RE_CommentLine.VALIDATE("Table Name",LCL_RE_CommentLine."Table Name"::"To-do");
+          LCL_RE_CommentLine.VALIDATE("No.",LCL_RE_ToDo."No.");
+          LCL_RE_CommentLine."Line No." := 10000;
+          LCL_RE_CommentLine.VALIDATE(Date,TODAY);
+          LCL_RE_CommentLine.VALIDATE(Comment,LCL_TE_Bemerkung);
+          LCL_RE_CommentLine.INSERT;
+        END;
+      END ELSE
+        BO_Return := FALSE;
+    END;
+
+    PROCEDURE VkKopfÜbersichtToKarte@1106700012(VAR P_VkKopf@1000 : Record 36);
+    BEGIN
+
+      // Anzeige einer Verkaufskopf-Karte aus der Verkaufskopf-Übersicht ...
+
+      CASE P_VkKopf."Document Type" OF
+        P_VkKopf."Document Type"::Quote:
+          FORM.RUN (FORM::"Sales Quote", P_VkKopf);
+
+        P_VkKopf."Document Type"::Order:
+          CASE P_VkKopf."Order Type" OF
+            P_VkKopf."Order Type"::Kraftstoff :
+              FORM.RUN (FORM::"VK Mineral Kraftstoffe", P_VkKopf);
+            P_VkKopf."Order Type"::"Schmierstoff/Folgemarkt" :
+              FORM.RUN (FORM::"VK Mineral Schmierstoffe", P_VkKopf);
+            P_VkKopf."Order Type"::Heizöl :
+              FORM.RUN (FORM::"VK Mineral Heizöl", P_VkKopf);
+            P_VkKopf."Order Type"::" " :
+              FORM.RUN (FORM::"Sales Order Standard", P_VkKopf);
+            //WM -BEGIN
+            P_VkKopf."Order Type"::Werbematerial :
+              FORM.RUN (FORM::Form5096767, P_VkKopf);
+            //WM - ENDE
+            ELSE
+              FORM.RUN (FORM::"Sales Order", P_VkKopf);
+          END;
+
+        P_VkKopf."Document Type"::Invoice:
+          FORM.RUN (FORM::"Sales Invoice", P_VkKopf);
+        P_VkKopf."Document Type"::"Return Order":
+          FORM.RUN (FORM::"Sales Return Order", P_VkKopf);
+        P_VkKopf."Document Type"::"Credit Memo":
+          FORM.RUN (FORM::"Sales Credit Memo", P_VkKopf);
+        P_VkKopf."Document Type"::"Blanket Order":
+          FORM.RUN (FORM::"Blanket Sales Order", P_VkKopf);
+      END;
+    END;
+
+    PROCEDURE "AuftragAusTourInDispoZurück()"@1106700011();
+    VAR
+      LCL_RE_Tourkopf@1000 : Record 5010014;
+      LCL_RE_Tourzeilen@1001 : Record 5010015;
+      LCL_RE_Dispositionspool@1002 : Record 5010164;
+    BEGIN
+      LCL_RE_Tourzeilen.RESET;
+      LCL_RE_Tourzeilen.SETCURRENTKEY("Tour No.","No.");
+      LCL_RE_Tourzeilen.SETRANGE("No.","No.");
+      IF LCL_RE_Tourzeilen.FINDFIRST THEN BEGIN
+        REPEAT                               //AVIA-RK-270504:   REPEAT/UNTIL hat gefehlt
+          LCL_RE_Tourzeilen.DELETE(); //Kein True da sonst DispoListe gelöscht wird.
+        UNTIL LCL_RE_Tourzeilen.NEXT = 0;    //AVIA-RK-270504
+      END;
+
+      //Sales Header von Tour befreien:
+      "Tour no." := '';
+      MODIFY;
+
+      SalesLine.SETRANGE("Document Type","Document Type");
+      SalesLine.SETRANGE("Document No.","No.");
+      IF SalesLine.FINDFIRST THEN BEGIN
+        REPEAT
+          SalesLine."Tour No." := '';
+          //MESSAGE('%1 %2',SalesLine."Document No.",SalesLine."Line No.");
+          SalesLine.MODIFY;
+        UNTIL SalesLine.NEXT = 0;
+      END;
+      //Dispopool Planung gebucht = False setzen, Tournr. rausnehmen
+      LCL_RE_Dispositionspool.RESET;
+      LCL_RE_Dispositionspool.SETCURRENTKEY(Typ,"No.","Currency No.");
+      LCL_RE_Dispositionspool.SETRANGE(Typ,0);
+      LCL_RE_Dispositionspool.SETRANGE("No.","No.");
+      IF LCL_RE_Dispositionspool.FINDFIRST THEN BEGIN
+        REPEAT                                    //AVIA-RK-270504:   REPEAT/UNTIL hat gefehlt
+          //MESSAGE('DispoArtikle %1  %2',LCL_RE_Dispositionspool."Nr.",LCL_RE_Dispositionspool."lfd. Nr.");
+          LCL_RE_Dispositionspool."Tour No." := '';
+          LCL_RE_Dispositionspool."Planning Posted" := FALSE;
+          LCL_RE_Dispositionspool.MODIFY;
+        UNTIL LCL_RE_Dispositionspool.NEXT = 0;   //AVIA-RK-270504
+      END;
+    END;
+
+    PROCEDURE "++++ TESSOL ++++"@60200();
+    BEGIN
+    END;
+
+    PROCEDURE GetGeschäftsbereich@1112400005();
+    VAR
+      LC_Debitor@1112400000 : Record 18;
+      LC_Geschäftsbereich@1112400001 : Record 60200;
+      LC_EinrGeschäftsbereich@1112400002 : Record 60201;
+      LC_CodeGeschäftsbereich@1000000000 : Code[10];
+    BEGIN
+      // *** START Index GB°1 ---------
+      IF "Sell-to Customer No." = '' THEN
+        EXIT;
+      IF NOT LC_Debitor.GET("Sell-to Customer No.") THEN
+        EXIT;
+
+      IF Geschaftsbereich <> '' THEN
+        EXIT;
+
+      LC_Geschäftsbereich.RESET;
+      LC_Geschäftsbereich.SETCURRENTKEY(Auftragstyp);
+      LC_Geschäftsbereich.SETRANGE(Auftragstyp,"Order Type");
+
+      IF LC_Geschäftsbereich.FINDFIRST THEN
+        LC_CodeGeschäftsbereich := LC_Geschäftsbereich.Code
+      ELSE
+        LC_CodeGeschäftsbereich := '';
+
+      IF LC_EinrGeschäftsbereich.GET("Sell-to Customer No.",LC_CodeGeschäftsbereich) THEN
+        VALIDATE(Geschaftsbereich,LC_CodeGeschäftsbereich)
+      ELSE
+        Geschaftsbereich := '';
+      // *** ENDE Index GB°1 ---------
+    END;
+
+    PROCEDURE Geschäftsbereichsdaten@1000000002();
+    VAR
+      LocDebitor@1112400000 : Record 18;
+      LocGeschäftsbeZahlungsform@1112400001 : Record 60033;
+      KeinGB@1112400002 : Boolean;
+      LOC_REC_Geschbereich@1108800000 : Record 60200;
+      LOC_REC_GeschbereichDeb@1108800001 : Record 60201;
+    BEGIN
+      // *** START Index GB°1 ---------
+
+      //  02  241007  wz.ah -
+      {KeinGB := FALSE;
+
+      IF "Sell-to Customer No." = '' THEN
+        EXIT;
+      IF NOT LocDebitor.GET("Sell-to Customer No.") THEN
+        EXIT;
+
+      // 07  091106    wz.ub
+      LocGeschäftsbeZahlungsform.SETRANGE(LocGeschäftsbeZahlungsform.Debitor,"Sell-to Customer No.");
+      LocGeschäftsbeZahlungsform.SETRANGE(LocGeschäftsbeZahlungsform.Geschäftsbereich,Geschäftsbereich);
+      LocGeschäftsbeZahlungsform.SETRANGE(LocGeschäftsbeZahlungsform.Ländercode,'');
+      IF NOT LocGeschäftsbeZahlungsform.FINDFIRST THEN BEGIN
+      //IF NOT LocGeschäftsbereich.GET("Sell-to Customer No.",Geschäftsbereich) THEN ////war
+        KeinGB := TRUE;
+      END;
+      // 07  091106    wz.ub
+
+      IF Geschäftsbereich = '' THEN
+        KeinGB := TRUE;
+
+      IF KeinGB THEN
+        "Salesperson Code" := LocDebitor."Salesperson Code"
+      ELSE
+        "Salesperson Code" := LocGeschäftsbeZahlungsform.Verkäufercode;
+
+      // 2. Zahlungsbedingung / Zahlungsarten
+      KeinGB := FALSE;
+      IF NOT LocDebitor.GET("Bill-to Customer No.") THEN
+        LocDebitor.GET("Sell-to Customer No.");
+      // 07  091106    wz.ub
+      LocGeschäftsbeZahlungsform.SETRANGE(LocGeschäftsbeZahlungsform.Debitor,"Bill-to Customer No.");
+      LocGeschäftsbeZahlungsform.SETRANGE(LocGeschäftsbeZahlungsform.Geschäftsbereich,Geschäftsbereich);
+      LocGeschäftsbeZahlungsform.SETRANGE(LocGeschäftsbeZahlungsform.Ländercode,'');
+      IF NOT LocGeschäftsbeZahlungsform.FINDFIRST THEN BEGIN
+           KeinGB := TRUE;
+      END;
+      // 07  091106    wz.ub
+
+
+      IF Geschäftsbereich = '' THEN
+        KeinGB := TRUE;
+
+      IF KeinGB THEN BEGIN
+        "Payment Terms Code" := LocDebitor."Payment Terms Code";
+        "Payment Method Code" := LocDebitor."Payment Method Code";
+      END ELSE BEGIN
+      // 07  091106    wz.ub
+        "Payment Terms Code" := LocGeschäftsbeZahlungsform.Zahlungsbedingung;
+        "Payment Method Code" := LocGeschäftsbeZahlungsform.Zahlungsform;
+      // 07  091106    wz.ub
+      END;
+
+      IF "Document Type" = "Document Type"::"Credit Memo" THEN
+        IF PaymentTerms.GET("Payment Terms Code") THEN
+          IF NOT PaymentTerms."Calc. Pmt. Disc. on Cr. Memos" THEN
+            "Payment Method Code" := '';
+
+      VALIDATE("Salesperson Code");
+      VALIDATE("Payment Terms Code");
+      VALIDATE("Payment Method Code");
+      // *** ENDE Index GB°1 ---------
+
+      // ------------ 07.12.2006 wz.jd Start ---------------------------------
+      IF "Document Type" = "Document Type"::Order THEN
+      BEGIN
+        IF (("Order Type" = "Order Type"::Kraftstoff) OR ("Order Type" = "Order Type"::Heizöl)) THEN
+        BEGIN
+          LOC_REC_Geschbereich.RESET;
+          LOC_REC_GeschbereichDeb.RESET;
+          LOC_REC_Geschbereich.SETCURRENTKEY(Auftragstyp);
+          LOC_REC_Geschbereich.SETRANGE(Auftragstyp,"Order Type");
+          IF LOC_REC_Geschbereich.FINDFIRST THEN
+          BEGIN
+            IF LOC_REC_Geschbereich."Global Dimension 1 Code" = '' THEN
+              BEGIN
+                ERROR('FEHLER!  Für den Geschäftsbereich %1 ist keine Kostenstelle angelegt \' +
+                'Betätigen Sie nach dem Schließen dieses Fensters die ESC-Taste und \' +
+                'geben Sie für den Geschäftsbereich eine Kostenstelle ein',"Order Type");
+                EXIT;
+              END;
+            LOC_REC_GeschbereichDeb.SETCURRENTKEY(Debitor,Geschäftsbereich);
+            LOC_REC_GeschbereichDeb.SETRANGE(Debitor,"Sell-to Customer No.");
+            LOC_REC_GeschbereichDeb.SETRANGE(Geschäftsbereich,LOC_REC_Geschbereich.Code);
+            IF LOC_REC_GeschbereichDeb.FINDFIRST THEN
+              VALIDATE("Shortcut Dimension 1 Code",LOC_REC_Geschbereich."Global Dimension 1 Code")
+            ELSE BEGIN
+              ERROR('FEHLER!  Es ist kein Geschäftsbereich %1 für diesen Debitor angelegt! \' +
+              'Betätigen Sie nach dem Schließen dieses Fensters die ESC-Taste und legen Sie den Geschäftsbereich an',"Order Type");
+              EXIT;
+            END;
+          END;
+        END;
+      END;
+      // ------------ 07.12.2006 wz.jd Ende ---------------------------------
+      }
+      // 02  241007  wz.ah +
+    END;
+
+    PROCEDURE GetShippingNo@1000000003();
+    BEGIN
+      // *** START Index VB°1 ---------
+      IF ("Shipping No." = '') THEN
+        IF ("Document Type" = "Document Type"::Order) OR
+           (("Document Type" = "Document Type"::Invoice) AND SalesSetup."Shipment on Invoice")
+        THEN BEGIN
+          TESTFIELD("Shipping No. Series");
+          //"Shipping No." := NoSeriesMgt.GetNextNo("Shipping No. Series","Posting Date",TRUE);
+          VALIDATE("Shipping No.",NoSeriesMgt.GetNextNo("Shipping No. Series","Posting Date",TRUE));
+        END;
+      // *** START Index VB°1 ---------
+    END;
+
+    PROCEDURE "---WG002---"@1000000006();
+    BEGIN
+    END;
+
+    PROCEDURE CreateORDERdim@1000000007();
+    VAR
+      lGLSetup@1000000002 : Record 98;
+      lDimensionValue@1000000001 : Record 349;
+      lDocDim@1000000000 : Record 357;
+    BEGIN
+      //START WG002 - 19.09.2007 - PV - Generate Dimension Value ORDER while creating Sales Order
+      //new function
+      IF "Document Type"="Document Type"::Order THEN
+      BEGIN
+        lGLSetup.GET;
+        lGLSetup.TESTFIELD("Dimension Code ZAKAZKA");
+        CLEAR(lDimensionValue);
+        lDimensionValue.INIT;
+        lDimensionValue.VALIDATE("Dimension Code",lGLSetup."Dimension Code ZAKAZKA");
+        lDimensionValue.VALIDATE(Code,"No.");
+        lDimensionValue.VALIDATE(Name,"No.");
+        IF lDimensionValue.INSERT(TRUE) THEN;
+
+        CLEAR(lDocDim);
+        lDocDim.INIT;
+        lDocDim.VALIDATE("Table ID",DATABASE::"Sales Header");
+        lDocDim.VALIDATE("Document Type",lDocDim."Document Type"::Order);
+        lDocDim.VALIDATE("Document No.","No.");
+        lDocDim.VALIDATE("Dimension Code",lDimensionValue."Dimension Code");
+        lDocDim.VALIDATE("Dimension Value Code",lDimensionValue.Code);
+        IF lDocDim.INSERT(TRUE) THEN;
+      END;
+      //STOP WG002 - 19.09.2007 - PV - Generate Dimension Value ORDER while creating Sales Order
+    END;
+
+    PROCEDURE DeleteORDERdim@1220000();
+    VAR
+      lGLSetup@1000000002 : Record 98;
+      lDimensionValue@1000000001 : Record 349;
+      lDocDim@1000000000 : Record 357;
+    BEGIN
+      //START WG002 - 19.09.2007 - PV - Generate Dimension Value ORDER while creating Sales Order
+      //new function
+      IF "Document Type"="Document Type"::Order THEN
+      BEGIN
+        lGLSetup.GET;
+        lGLSetup.TESTFIELD("Dimension Code ZAKAZKA");
+        lDimensionValue.SETRANGE("Dimension Code",lGLSetup."Dimension Code ZAKAZKA");
+        lDimensionValue.SETRANGE(Code,"No.");
+        IF lDimensionValue.FINDFIRST THEN
+          IF lDimensionValue.DELETE(TRUE) THEN;
+      END;
+      //STOP WG002 - 19.09.2007 - PV - Generate Dimension Value ORDER while creating Sales Order
+    END;
+
+    PROCEDURE "--WG021--"@1220002();
+    BEGIN
+    END;
+
+    PROCEDURE SetVATNoAndVATPg@1220003();
+    VAR
+      recCust@1220000 : Record 18;
+      recCustVATRegs@1220001 : Record 84437;
+      recCountry@1220002 : Record 9;
+      lCustVatReg@1220003 : Record 84437;
+      lCust@1220004 : Record 18;
+      lrecCompInfo@1220005 : Record 79;
+    BEGIN
+      //START CDLJV - 25.10.2007
+
+      //WG065 - 13.08.2009 - MP - modified function SetVATNoAndVATPg()
+      //modified this function
+
+      lrecCompInfo.GET;
+      IF NOT lCust.GET("Bill-to Customer No.") THEN
+        lCust.GET("Sell-to Customer No.");
+
+      //**** "VAT Registration No." from table Customer VAT Regi.. or from Customer card
+      //START - WG - 07.06.2012 - RCH - M3959 - Customer Adress History
+      //
+      // oldcode
+      //
+      //IF lCustVatReg.GET("Bill-to Customer No.","VAT Settlement Country Code") THEN BEGIN
+      //  IF lCustVatReg."VAT Registration No." <> '' THEN
+      //    "VAT Registration No." := lCustVatReg."VAT Registration No."
+      //  ELSE
+      //    "VAT Registration No." := lCust."VAT Registration No.";
+      //END ELSE
+      //  "VAT Registration No." := lCust."VAT Registration No.";
+
+      "VAT Registration No." := lCustVatReg.FindCustomerVATRegNo("Bill-to Customer No.",
+                                                                 "VAT Settlement Country Code",
+                                                                 "VAT Taxation Date");
+      IF "VAT Registration No." = '' THEN BEGIN
+         "VAT Registration No." := lCust."VAT Registration No.";
+         END;
+
+      //STOP - WG - 07.06.2012 - RCH - M3959 - Customer Adress History
+
+      //**** reload original information to header while deleting "VAT Settlement Country Code"
+      //**** or record didn't find in table recCountry by "VAT Settlement Country Code"
+      IF (NOT recCountry.GET("VAT Settlement Country Code")) OR
+         ((recCountry.Code <> lrecCompInfo."Country Code") AND (recCountry."VAT Registration No." = '')) THEN BEGIN
+        "Company VAT Registration No." := '';
+        VALIDATE("Gen. Bus. Posting Group",lCust."Gen. Bus. Posting Group");
+        VALIDATE("VAT Bus. Posting Group",lCust."VAT Bus. Posting Group");
+        EXIT;
+      END;
+
+
+      //**** record found in table recCountry by "VAT Settlement Country Code"
+      //**** but recCountry."VAT Registration No." is empty
+      IF (recCountry.Code = lrecCompInfo."Country Code") AND (recCountry."VAT Registration No." = '') THEN BEGIN
+        "Company VAT Registration No." := lrecCompInfo."VAT Registration No.";
+        VALIDATE("Gen. Bus. Posting Group",lCust."Gen. Bus. Posting Group");
+        VALIDATE("VAT Bus. Posting Group",lCust."VAT Bus. Posting Group");
+        //START - WG - 22.05.2015 - MP - NAV-12828
+        CheckAndSetLocalReverseCharge(FALSE);
+        //STOP - WG - 22.05.2015 - MP - NAV-12828
+        EXIT;
+      END;
+
+      //**** record found in table recCountry by "VAT Settlement Country Code"
+      //**** and recCountry."VAT Registration No." isn't empty
+      IF recCountry."VAT Registration No." <> '' THEN BEGIN
+        "Company VAT Registration No." := recCountry."VAT Registration No.";
+        VALIDATE("Different G/L Account Code", recCountry."Different G/L Account Code");
+        VALIDATE("Gen. Bus. Posting Group",recCountry."Gen. Bus. Posting Group");
+
+        IF ("Bill-to Country Code" = "VAT Settlement Country Code") THEN BEGIN
+          IF (lCust."VAT Registration No." <> '') THEN BEGIN
+            VALIDATE("VAT Bus. Posting Group", recCountry."VAT DOMESTIC REG");
+          END ELSE BEGIN
+            VALIDATE("VAT Bus. Posting Group", recCountry."VAT DOMESTIC NEREG");
+          END;
+        END ELSE BEGIN
+          IF (recCustVATRegs.GET("Bill-to Customer No.", "VAT Settlement Country Code")) THEN BEGIN
+            recCustVATRegs.TESTFIELD("VAT Registration No.");
+            VALIDATE("VAT Bus. Posting Group", recCountry."VAT DOMESTIC REG");
+          END ELSE BEGIN
+             VALIDATE("VAT Bus. Posting Group", recCountry."VAT DOMESTIC NEREG");
+          END;
+        END;
+        //START - WG - 22.05.2015 - MP - NAV-12828
+        CheckAndSetLocalReverseCharge(FALSE);
+        //STOP - WG - 22.05.2015 - MP - NAV-12828
+      END;
+    END;
+
+    PROCEDURE "Create Purch. Order Product"@1220001();
+    VAR
+      locTbVendorTemp@1220000 : TEMPORARY Record 23;
+      locTbCarPool@1220001 : Record 5010022;
+      lrecPurchOrderComment@1220003 : Record 84495;
+      "-WG128-"@1220004 : Integer;
+      locSalesLine@1220002 : Record 37;
+      locCorrection@1220005 : Boolean;
+      locVendor@1220006 : Code[20];
+      locPurchOrderProductNo@1220007 : Code[20];
+      locERR01@1220008 : TextConst 'CSY=Oprava nákupní objednávky PHM není moºná ²ádky obsahují více neº jednoho dodavatele nebo ƒísela nákupních objednávek PHM.';
+      locPurchaseHeader@1220009 : Record 38;
+      locPurchLineExt@1220010 : Record 84948;
+      locSalesLineEXT@1220011 : Record 84941;
+    BEGIN
+      //WG034 - 27.11.2007 - PV - Create purch. orders for product
+      //new function
+      IF ("Kind of Order" <> "Kind of Order"::"Vendor->Customer") AND
+         ("Kind of Order" <> "Kind of Order"::"Vendor->Stock") THEN
+        EXIT;
+
+      TESTFIELD("Shortcut Dimension 1 Code");
+      TESTFIELD("Shortcut Dimension 2 Code");
+
+      //START - WG128 - MM - 30.11.11 - M2445 - POV
+      locCorrection := FALSE;
+      locPurchOrderProductNo := '';
+      locCorrection := CorrectionPurchaseOrder(0, locPurchOrderProductNo, TRUE); //Product
+
+      {-- oldcode
+      locCorrection := FALSE;
+      locSalesLine.RESET;
+      locSalesLine.SETRANGE("Document Type", "Document Type");
+      locSalesLine.SETRANGE("Document No.", "No.");
+      locSalesLine.SETRANGE(Type, SalesLine.Type::Item);
+      locSalesLine.SETFILTER(Quantity, '<>0');
+      locSalesLine.SETFILTER("Purchase Order No. Product", '%1', '');
+      IF NOT locSalesLine.FINDFIRST THEN BEGIN
+
+        locCorrection := TRUE;
+
+        locSalesLine.RESET;
+        locSalesLine.SETRANGE("Document Type", "Document Type");
+        locSalesLine.SETRANGE("Document No.", "No.");
+        locSalesLine.SETRANGE(Type, SalesLine.Type::Item);
+        locSalesLine.SETFILTER(Quantity, '<>0');
+        IF locSalesLine.FINDFIRST THEN BEGIN
+          locVendor := locSalesLine."Vendor No.";
+          locPurchOrderProductNo := locSalesLine."Purchase Order No. Product";
+          REPEAT
+            IF locVendor<>locSalesLine."Vendor No."
+              THEN locCorrection := FALSE;
+            IF locPurchOrderProductNo<>locSalesLine."Purchase Order No. Product"
+              THEN locCorrection := FALSE;
+          UNTIL locSalesLine.NEXT = 0;
+         END;
+
+        IF locCorrection
+         THEN BEGIN
+            IF locPurchaseHeader.GET("Document Type"::Order, locPurchOrderProductNo)
+              THEN locPurchaseHeader.DELETE(TRUE)
+              ELSE locCorrection := FALSE;
+          END
+         ELSE ERROR(locERR01)
+
+      END;
+      }
+      //STOP - WG128 - MM - 30.11.11 - M2445 - POV
+
+      SalesLine.RESET;
+      SalesLine.SETRANGE("Document Type", "Document Type");
+      SalesLine.SETRANGE("Document No.", "No.");
+      SalesLine.SETRANGE(Type, SalesLine.Type::Item);
+      SalesLine.SETFILTER(Quantity, '<>0');
+      SalesLine.SETFILTER("Purchase Order No. Product", '%1', '');
+      IF NOT locTbVendorTemp.ISEMPTY THEN
+        locTbVendorTemp.DELETEALL;
+      //check lines and take vendors
+      IF SalesLine.FINDFIRST THEN
+        REPEAT
+         SalesLine.TESTFIELD("Vendor No.");
+         //START WG164 15.5.2015 CDLKH
+         locSalesLineEXT.GET(SalesLine."Document Type", SalesLine."Document No.", SalesLine."Line No.");
+         IF (locSalesLineEXT."Fixed Pricing Type - Purch." = '') AND (locSalesLineEXT."Fixed Pricing Source - Purch." = '') THEN
+         //STOP WG164 15.5.2015 CDLKH
+           SalesLine.TESTFIELD("Contingent No.");
+         IF NOT locTbVendorTemp.GET(SalesLine."Vendor No.") THEN BEGIN
+           TbVendor.GET(SalesLine."Vendor No.");
+           locTbVendorTemp := TbVendor;
+           locTbVendorTemp.INSERT;
+         END;
+        UNTIL SalesLine.NEXT = 0;
+
+      IF locTbVendorTemp.FINDFIRST THEN
+        REPEAT
+         //create purch. header
+         TbPurchaseHeader.INIT;
+         TbPurchaseHeader."Document Type" := TbPurchaseHeader."Document Type"::Order;
+         //START - WG128 - MM - 30.11.11 - M2445 - POV
+         IF locCorrection THEN
+            TbPurchaseHeader."No." := locPurchOrderProductNo
+         ELSE
+            TbPurchaseHeader."No." := '';
+         //STOP - WG128 - MM - 30.11.11 - M2445 - POV
+         TbPurchaseHeader.INSERT(TRUE);
+         TbPurchaseHeader.VALIDATE("Buy-from Vendor No.", locTbVendorTemp."No.");
+         TbPurchaseHeader.VALIDATE("Sales Order No. Wholesale", "No.");
+         TbPurchaseHeader.VALIDATE("Customer No. Wholesale", "Sell-to Customer No.");
+         TbPurchaseHeader."Order Type" := TbPurchaseHeader."Order Type"::Product;
+         //START - WG - 15.07.2009 - MP - modified function "Create Purch. Order Product" and "Create Purch. Order Transport"
+         TbPurchaseHeader.VALIDATE("VAT Settlement Country Code","VAT Settlement Country Code");
+         //STOP - WG - 15.07.2009 - MP - modified function "Create Purch. Order Product" and "Create Purch. Order Transport"
+         TbPurchaseHeader.VALIDATE("Shortcut Dimension 1 Code", "Shortcut Dimension 1 Code");
+         TbPurchaseHeader.VALIDATE("Shortcut Dimension 2 Code", "Shortcut Dimension 2 Code");
+         TbPurchaseHeader.MODIFY(TRUE);
+
+         //create purch. lines
+         SalesLine.SETRANGE("Vendor No.", locTbVendorTemp."No."); //other filters for sales lines are still set
+         LineCounter := 0;
+         IF SalesLine.FINDFIRST THEN
+           REPEAT
+            //START WG164 15.5.2015 - CDLKH
+            SalesLine.CALCFIELDS("Fixed Pricing Type - Purch.", "Fixed Pricing Source - Purch.");
+            //STOP WG164 15.5.2015 - CDLKH
+            LineCounter += 10000;
+            TbPurchaseLine.INIT;
+            TbPurchaseLine."Document Type" := TbPurchaseHeader."Document Type";
+            TbPurchaseLine."Document No."  := TbPurchaseHeader."No.";
+            TbPurchaseLine."Line No."      := LineCounter;
+            TbPurchaseLine.VALIDATE("Buy-from Vendor No.", TbPurchaseHeader."Buy-from Vendor No.");
+            TbPurchaseLine.Type := SalesLine.Type;
+            TbPurchaseLine.VALIDATE("No.", SalesLine."No.");
+            TbPurchaseLine."Select Location Of Contingent" := SalesLine."Location Code";
+            TbPurchaseLine.VALIDATE("Purchase Source Code", SalesLine."Purchase Source Code");
+            //START WG164 15.5.2015 - CDLKH
+            IF (SalesLine."Fixed Pricing Type - Purch." <> '') AND (SalesLine."Fixed Pricing Source - Purch." <> '') THEN BEGIN
+              TbPurchaseLine.VALIDATE("Fixed Pricing Type", SalesLine."Fixed Pricing Type - Purch.");
+              TbPurchaseLine.VALIDATE("Fixed Pricing Source", SalesLine."Fixed Pricing Source - Purch.");
+            END ELSE
+            //STOP WG164 15.5.2015 - CDLKH
+              TbPurchaseLine.VALIDATE("Contingent No.", SalesLine."Contingent No.");
+
+      //      TbPurchaseLine.VALIDATE("Location Code", SalesLine."Location Code");
+            IF locTbCarPool.GET(SalesLine."Car No.") THEN BEGIN
+              locTbCarPool.TESTFIELD("Location Code");
+              TbPurchaseLine.VALIDATE("Location Code", locTbCarPool."Location Code");
+            END;
+
+            //START WG164 17.05.2015 p²esunuto od insertu nahoru
+            TbPurchaseLine."Sales Order No. Wholesale"     := SalesLine."Document No.";
+            TbPurchaseLine."Sales Order Line No.Wholesale" := SalesLine."Line No.";
+            //STOP WG164 17.05.2015 p²esunuto od insertu nahoru
+
+            TbPurchaseLine.VALIDATE(Quantity, SalesLine.Quantity);
+            TbPurchaseLine."Ordered Quantity (Wholesales)" := TbPurchaseLine.Quantity;
+
+            TbPurchaseLine.INSERT(TRUE);
+
+            SalesLine."Purchase Order No. Product"     := TbPurchaseLine."Document No.";
+            SalesLine."Purchase Order Line No.Product" := TbPurchaseLine."Line No.";
+            SalesLine.MODIFY;
+           UNTIL SalesLine.NEXT = 0;
+
+           //START: WG034 - JD - 15.07.2008
+           lrecPurchOrderComment.RESET;
+           lrecPurchOrderComment.SETRANGE(Type, lrecPurchOrderComment.Type::Product);
+           lrecPurchOrderComment.SETRANGE("Sales Header Doc. Type", "Document Type");
+           lrecPurchOrderComment.SETRANGE("Sales Header No.", "No.");
+           IF lrecPurchOrderComment.FINDFIRST THEN BEGIN
+             REPEAT
+               LineCounter += 10000;
+               TbPurchaseLine.INIT;
+               TbPurchaseLine."Document Type" := TbPurchaseHeader."Document Type";
+               TbPurchaseLine."Document No." := TbPurchaseHeader."No.";
+               TbPurchaseLine."Line No." := LineCounter;
+               //+WG - 20.07.2015 - SS - SS:NAV-11668
+               IF STRLEN(lrecPurchOrderComment.Description) > 50 THEN BEGIN
+                TbPurchaseLine.Description := COPYSTR(lrecPurchOrderComment.Description,1,50);
+                TbPurchaseLine."Description 2" := COPYSTR(lrecPurchOrderComment.Description,51);
+               END ELSE BEGIN
+                TbPurchaseLine.Description := lrecPurchOrderComment.Description;
+               END;
+               //-WG - 20.07.2015 - SS - SS:NAV-11668
+               TbPurchaseLine.INSERT(TRUE);
+             UNTIL lrecPurchOrderComment.NEXT = 0;
+           END;
+           //STOP: WG034 - JD - 15.07.2008
+
+           //START: WG - JD - 23.07.2008
+           //old code:
+           //IF SendByEmailFax THEN BEGIN         // WG034 - JD - 22.05.2008
+           //  IF NOT cuEmailling.SendDocByEmailFax(DocTypeOption::"Purch. Order", TbPurchaseHeader."No.", '', TRUE) THEN
+           //    ERROR(Text60003);
+           //END;
+           //COMMIT;
+           //STOP: WG - JD - 23.07.2008
+
+        UNTIL locTbVendorTemp.NEXT = 0;
+
+      SalesLine.RESET;
+    END;
+
+    PROCEDURE "Create Purch. Order Transport"@1220004();
+    VAR
+      locTbVendorTemp@1220000 : TEMPORARY Record 23;
+      locTbShippingAgent@1220001 : Record 291;
+      locPurchSetup@1220002 : Record 312;
+      locTbCarPool@1220003 : Record 5010022;
+      locText001@1220004 : TextConst 'CSY=U p²epravce %1 není vyplnÏno ƒíslo dodavatele. Objednávka p²epravy nebyla vytvo²ena pro ²ádek %2 (%3 mnoºství: %4).';
+      lrecPurchOrderComment@1220006 : Record 84495;
+      "-WG128-"@1220011 : Integer;
+      locSalesLine@1220010 : Record 37;
+      locCorrection@1220009 : Boolean;
+      locVendor@1220008 : Code[20];
+      locPurchOrderTransNo@1220007 : Code[20];
+      locPurchaseHeader@1220005 : Record 38;
+      locERR01@1220012 : TextConst 'CSY=Oprava nákupní objednávky dopravy není moºná ²ádky obsahují více neº jednoho dodavatele nebo ƒísela nákupních objednávek dopravy.';
+      locPurchLineExt@1220013 : Record 84948;
+    BEGIN
+               //+WG - 20.07.2015 - SS - SS:NAV-11668
+      //WG034 - 27.11.2007 - PV - Create purch. orders for transport
+      //new function
+
+      locPurchSetup.GET;
+      locPurchSetup.TESTFIELD("Charge (Item) Code for Trans");
+
+      TESTFIELD("Shortcut Dimension 1 Code");
+      TESTFIELD("Shortcut Dimension 2 Code");
+
+      //START - WG128 - MM - 30.11.11 - M2445 - POV
+      locCorrection := FALSE;
+      locPurchOrderTransNo := '';
+      locCorrection := CorrectionPurchaseOrder(1, locPurchOrderTransNo, TRUE); //Transport
+
+      {-- oldcode
+      locCorrection := FALSE;
+      locSalesLine.RESET;
+      locSalesLine.SETRANGE("Document Type", "Document Type");
+      locSalesLine.SETRANGE("Document No.", "No.");
+      locSalesLine.SETRANGE(Type, SalesLine.Type::Item);
+      locSalesLine.SETFILTER(Quantity, '<>0');
+      locSalesLine.SETFILTER("Purchase Order No. Trans", '%1', '');
+      IF NOT locSalesLine.FINDFIRST THEN BEGIN
+
+        locCorrection := TRUE;
+
+        locSalesLine.RESET;
+        locSalesLine.SETRANGE("Document Type", "Document Type");
+        locSalesLine.SETRANGE("Document No.", "No.");
+        locSalesLine.SETRANGE(Type, SalesLine.Type::Item);
+        locSalesLine.SETFILTER(Quantity, '<>0');
+        IF locSalesLine.FINDFIRST THEN BEGIN
+          locVendor := locSalesLine."Vendor No.";
+          locPurchOrderTransNo := locSalesLine."Purchase Order No. Trans";
+          REPEAT
+            IF locVendor<>locSalesLine."Vendor No."
+              THEN locCorrection := FALSE;
+            IF locPurchOrderTransNo<>locSalesLine."Purchase Order No. Trans"
+              THEN locCorrection := FALSE;
+          UNTIL locSalesLine.NEXT = 0;
+         END;
+
+        IF locCorrection
+         THEN BEGIN
+            IF locPurchaseHeader.GET("Document Type"::Order, locPurchOrderTransNo)
+              THEN locPurchaseHeader.DELETE(TRUE)
+              ELSE locCorrection := FALSE;
+          END
+         ELSE ERROR(locERR01)
+
+      END;
+      }
+      //STOP - WG128 - MM - 30.11.11 - M2445 - POV
+
+      SalesLine.RESET;
+      SalesLine.SETRANGE("Document Type", "Document Type");
+      SalesLine.SETRANGE("Document No.", "No.");
+      SalesLine.SETRANGE(Type, SalesLine.Type::Item);
+      SalesLine.SETFILTER(Quantity, '<>0');
+      SalesLine.SETFILTER("Purchase Order No. Trans", '%1', '');
+      IF NOT locTbVendorTemp.ISEMPTY THEN
+        locTbVendorTemp.DELETEALL;
+      //check lines and take vendors
+      IF SalesLine.FINDFIRST THEN
+        REPEAT
+         SalesLine.TESTFIELD("Shipping Agent Code");
+         locTbShippingAgent.GET(SalesLine."Shipping Agent Code");
+      //   locTbShippingAgent.TESTFIELD("Vendor No.");
+         IF locTbShippingAgent."Vendor No." <> '' THEN BEGIN
+           IF NOT locTbVendorTemp.GET(locTbShippingAgent."Vendor No.") THEN BEGIN
+             TbVendor.GET(locTbShippingAgent."Vendor No.");
+             locTbVendorTemp := TbVendor;
+             locTbVendorTemp.Name := SalesLine."Shipping Agent Code";
+             locTbVendorTemp.INSERT;
+           END
+          ELSE MESSAGE(locText001, "Shipping Agent Code", SalesLine."Line No.", SalesLine.Description, SalesLine.Quantity);
+         END;
+        UNTIL SalesLine.NEXT = 0;
+
+      IF locTbVendorTemp.FINDFIRST THEN
+        REPEAT
+         //create purch. header
+         TbPurchaseHeader.INIT;
+         TbPurchaseHeader."Document Type" := TbPurchaseHeader."Document Type"::Order;
+         //START - WG128 - MM - 30.11.11 - M2445 - POV
+         IF locCorrection THEN
+            TbPurchaseHeader."No." := locPurchOrderTransNo
+         ELSE
+            TbPurchaseHeader."No." := '';
+         //STOP - WG128 - MM - 30.11.11 - M2445 - POV
+         TbPurchaseHeader.INSERT(TRUE);
+         TbPurchaseHeader.VALIDATE("Buy-from Vendor No.", locTbVendorTemp."No.");
+         TbPurchaseHeader.VALIDATE("Sales Order No. Wholesale", "No.");
+         TbPurchaseHeader.VALIDATE("Customer No. Wholesale", "Sell-to Customer No.");
+         TbPurchaseHeader."Order Type" := TbPurchaseHeader."Order Type"::Transport;
+         //START - WG - 15.07.2009 - MP - modified function "Create Purch. Order Product" and "Create Purch. Order Transport"
+         TbPurchaseHeader.VALIDATE("VAT Settlement Country Code","VAT Settlement Country Code");
+         //STOP - WG - 15.07.2009 - MP - modified function "Create Purch. Order Product" and "Create Purch. Order Transport"
+         TbPurchaseHeader.VALIDATE("Shortcut Dimension 1 Code", "Shortcut Dimension 1 Code");
+         TbPurchaseHeader.VALIDATE("Shortcut Dimension 2 Code", "Shortcut Dimension 2 Code");
+         TbPurchaseHeader.MODIFY(TRUE);
+
+         //create purch. lines
+         SalesLine.SETRANGE("Shipping Agent Code", locTbVendorTemp.Name); //other filters for sales lines are still set
+         LineCounter := 0;
+         IF SalesLine.FINDFIRST THEN
+           REPEAT
+            LineCounter += 10000;
+            TbPurchaseLine.INIT;
+            TbPurchaseLine."Document Type" := TbPurchaseHeader."Document Type";
+            TbPurchaseLine."Document No."  := TbPurchaseHeader."No.";
+            TbPurchaseLine."Line No."      := LineCounter;
+            TbPurchaseLine.VALIDATE("Buy-from Vendor No.", TbPurchaseHeader."Buy-from Vendor No.");
+            TbPurchaseLine.Type := TbPurchaseLine.Type::"Charge (Item)";
+            TbPurchaseLine.VALIDATE("No.", locPurchSetup."Charge (Item) Code for Trans");
+            TbPurchaseLine.Description     := SalesLine.Description;
+            TbPurchaseLine."Description 2" := SalesLine."Description 2";
+            TbPurchaseLine."Select Location Of Contingent" := SalesLine."Location Code";
+            TbPurchaseLine.VALIDATE("Purchase Source Code", SalesLine."Purchase Source Code");
+
+      //      TbPurchaseLine.VALIDATE("Contingent No.", SalesLine."Contingent No.");
+      //      TbPurchaseLine.VALIDATE("Location Code", SalesLine."Location Code");
+            IF locTbCarPool.GET(SalesLine."Car No.") THEN BEGIN
+              locTbCarPool.TESTFIELD("Location Code");
+              TbPurchaseLine.VALIDATE("Location Code", locTbCarPool."Location Code");
+            END;
+
+            TbPurchaseLine.VALIDATE(Quantity, SalesLine.Quantity);
+            TbPurchaseLine."Ordered Quantity (Wholesales)" := TbPurchaseLine.Quantity;
+            TbPurchaseLine.VALIDATE("Direct Unit Cost", SalesLine."Purchase Price Freight (LCY)");
+            TbPurchaseLine.VALIDATE(Amount, TbPurchaseLine."Direct Unit Cost" * TbPurchaseLine.Quantity);
+
+            TbPurchaseLine."Sales Order No. Wholesale"     := SalesLine."Document No.";
+            TbPurchaseLine."Sales Order Line No.Wholesale" := SalesLine."Line No.";
+            //START WG164 20.8.2015 - CDLKH
+            SalesLine.CALCFIELDS("Fixed Pricing Type - Purch.", "Fixed Pricing Source - Purch.");
+            IF (SalesLine."Fixed Pricing Type - Purch." <> '') AND (SalesLine."Fixed Pricing Source - Purch." <> '') THEN BEGIN
+              TbPurchaseLine.VALIDATE("Fixed Pricing Type", SalesLine."Fixed Pricing Type - Purch.");
+              TbPurchaseLine.VALIDATE("Fixed Pricing Source", SalesLine."Fixed Pricing Source - Purch.");
+            END;
+            //STOP WG164 20.8.2015 - CDLKH
+
+            TbPurchaseLine.INSERT(TRUE);
+
+            SalesLine."Purchase Order No. Trans"     := TbPurchaseLine."Document No.";
+            SalesLine."Purchase Order Line No. Trans" := TbPurchaseLine."Line No.";
+            SalesLine.MODIFY;
+           UNTIL SalesLine.NEXT = 0;
+
+           //START: WG034 - JD - 15.07.2008
+           lrecPurchOrderComment.RESET;
+           lrecPurchOrderComment.SETRANGE(Type, lrecPurchOrderComment.Type::Transport);
+           lrecPurchOrderComment.SETRANGE("Sales Header Doc. Type", "Document Type");
+           lrecPurchOrderComment.SETRANGE("Sales Header No.", "No.");
+           IF lrecPurchOrderComment.FINDFIRST THEN BEGIN
+             REPEAT
+               LineCounter += 10000;
+               TbPurchaseLine.INIT;
+               TbPurchaseLine."Document Type" := TbPurchaseHeader."Document Type";
+               TbPurchaseLine."Document No." := TbPurchaseHeader."No.";
+               TbPurchaseLine."Line No." := LineCounter;
+               //+WG - 20.07.2015 - SS - SS:NAV-11668
+               IF STRLEN(lrecPurchOrderComment.Description) > 50 THEN BEGIN
+                TbPurchaseLine.Description := COPYSTR(lrecPurchOrderComment.Description,1,50);
+                TbPurchaseLine."Description 2" := COPYSTR(lrecPurchOrderComment.Description,51);
+               END ELSE BEGIN
+                TbPurchaseLine.Description := lrecPurchOrderComment.Description;
+               END;
+               //+WG - 20.07.2015 - SS - SS:NAV-11668
+
+               TbPurchaseLine.INSERT(TRUE);
+             UNTIL lrecPurchOrderComment.NEXT = 0;
+           END;
+           //STOP: WG034 - JD - 15.07.2008
+
+           //START: WG - JD - 23.07.2008
+           //old code:
+           //IF SendByEmailFax THEN BEGIN    // WG034 - JD - 22.05.2008
+           //  IF NOT cuEmailling.SendDocByEmailFax(DocTypeOption::"Purch. Order", TbPurchaseHeader."No.", '', TRUE) THEN
+           //    ERROR(Text60003);
+           //END;
+           //COMMIT;
+           //STOP: WG - JD - 23.07.2008
+
+        UNTIL locTbVendorTemp.NEXT = 0;
+
+      SalesLine.RESET;
+    END;
+
+    PROCEDURE CheckPurchOrdersContacts@1220008(parCheckVendorContacts@1220002 : Boolean;parCheckTransportContacts@1220003 : Boolean);
+    VAR
+      lcuEmailing@1220000 : Codeunit 84400;
+      locTbShippingAgent@1220001 : Record 291;
+      locPurchOrderNo@1220004 : Code[20];
+    BEGIN
+
+      // check vendor contacts
+
+      IF parCheckVendorContacts THEN
+      BEGIN
+        SalesLine.RESET;
+        SalesLine.SETRANGE("Document Type", "Document Type");
+        SalesLine.SETRANGE("Document No.", "No.");
+        SalesLine.SETRANGE(Type, SalesLine.Type::Item);
+        SalesLine.SETFILTER(Quantity, '<>0');
+        //START - WG128 - MM - 30.11.11 - M2445 - POV
+        locPurchOrderNo := '';
+        IF NOT CorrectionPurchaseOrder(0, locPurchOrderNo, FALSE) THEN
+           SalesLine.SETFILTER("Purchase Order No. Product", '%1', '');
+        //STOP - WG128 - MM - 30.11.11 - M2445 - POV
+        IF SalesLine.FINDFIRST THEN
+          REPEAT
+            SalesLine.TESTFIELD("Vendor No.");
+            lcuEmailing.CheckContacts(SalesLine."Vendor No.", '');
+          UNTIL SalesLine.NEXT = 0;
+      END;
+
+      // check transporter contacts
+      IF parCheckTransportContacts THEN
+      BEGIN
+        SalesLine.RESET;
+        SalesLine.SETRANGE("Document Type", "Document Type");
+        SalesLine.SETRANGE("Document No.", "No.");
+        SalesLine.SETRANGE(Type, SalesLine.Type::Item);
+        SalesLine.SETFILTER(Quantity, '<>0');
+        //START - WG128 - MM - 30.11.11 - M2445 - POV
+        locPurchOrderNo := '';
+        IF NOT CorrectionPurchaseOrder(1, locPurchOrderNo, FALSE) THEN
+           SalesLine.SETFILTER("Purchase Order No. Trans", '%1', '');
+        //STOP - WG128 - MM - 30.11.11 - M2445 - POV
+        IF SalesLine.FINDFIRST THEN
+          REPEAT
+            SalesLine.TESTFIELD("Shipping Agent Code");
+            locTbShippingAgent.GET(SalesLine."Shipping Agent Code");
+            IF locTbShippingAgent."Vendor No." <> '' THEN
+              lcuEmailing.CheckContacts(locTbShippingAgent."Vendor No.", '');
+          UNTIL SalesLine.NEXT = 0;
+      END;
+    END;
+
+    PROCEDURE "--WG034--"@1220005();
+    BEGIN
+    END;
+
+    PROCEDURE GetContactFromCust@1220006(VAR Contact@1220003 : Record 5050) : Boolean;
+    VAR
+      recCust@1220001 : Record 18;
+      recContBusRel@1220004 : Record 5054;
+    BEGIN
+      IF recCust.GET("Sell-to Customer No.") THEN BEGIN
+        recContBusRel.RESET;
+        recContBusRel.SETRANGE("Link to Table", recContBusRel."Link to Table"::Customer);
+        recContBusRel.SETRANGE("No.", recCust."No.");
+        IF recContBusRel.FINDFIRST THEN BEGIN
+          Contact.GET(recContBusRel."Contact No.");
+          EXIT(TRUE);
+        END;
+      END;
+
+      EXIT(FALSE);
+    END;
+
+    PROCEDURE CheckPaymentMetod@1220007();
+    VAR
+      lrecPaymentMethod@1220000 : Record 289;
+      lrecPaymMethodCheck@1220001 : Record 289;
+    BEGIN
+      //START - WG - 16.11.2016 - MP - NAV-19104
+      IF gRecursiveCount = 0 THEN BEGIN
+        IF Cust."No." = '' THEN
+          GetCust("Bill-to Customer No.");
+        "Payment Method Code" := Cust."Payment Method Code";
+      END;
+      //STOP - WG - 16.11.2016 - MP - NAV-19104
+
+      IF lrecPaymentMethod.GET("Payment Method Code") THEN BEGIN
+        //START - WG - 16.11.2016 - MP - NAV-19104
+        //IF ("Currency Code" <> '') AND (STRPOS(lrecPaymentMethod."Filtr meny","Currency Code") = 0) THEN BEGIN
+        lrecPaymMethodCheck.RESET;
+        lrecPaymMethodCheck.SETRANGE(Code, lrecPaymentMethod.Code);
+        lrecPaymMethodCheck.SETRANGE("Filtr meny", "Currency Code");
+        IF lrecPaymMethodCheck.ISEMPTY THEN BEGIN
+        //STOP - WG - 16.11.2016 - MP - NAV-19104
+          //START - WG - 20.01.2010 - MP - new check at setting field Payment Method Code
+          //"Payment Method Code" := lrecPaymentMethod."Jiný zpàsob platby";
+          IF Cust."No." = '' THEN
+            GetCust("Bill-to Customer No.");
+          "Payment Method Code" := lrecPaymentMethod.CheckCustPaymMethod(lrecPaymentMethod."Jiny zpusob platby", Cust);
+          //STOP - WG - 20.01.2010 - MP - new check at setting field Payment Method Code
+          //START - WG - 16.11.2016 - MP - NAV-19104
+          gRecursiveCount += 1;
+          IF gRecursiveCount > 10 THEN
+            ERROR(Text053);
+          CheckPaymentMetod();
+          //STOP - WG - 16.11.2016 - MP - NAV-19104
+        END;
+      END;
+    END;
+
+    PROCEDURE GetFirstNoFromText@1000000004(pText@1000000000 : Text[1024]) : Code[20];
+    VAR
+      i@1000000001 : Integer;
+      lNo@1000000002 : Code[20];
+    BEGIN
+      //WG047 VP 8.6.2009
+
+      REPEAT
+        i += 1;
+      UNTIL (i = STRLEN(pText)) OR (pText[i] IN ['0'..'9']);
+
+      WHILE (i <= STRLEN(pText)) AND (pText[i] IN ['0'..'9']) DO BEGIN
+        lNo := lNo + FORMAT(pText[i]);
+        i += 1;
+      END;
+
+      EXIT(lNo);
+    END;
+
+    PROCEDURE SetVATToSalesLineByDate@1220010();
+    VAR
+      lrecSaleLine@1220000 : Record 37;
+    BEGIN
+
+      lrecSaleLine.RESET;
+      lrecSaleLine.SETRANGE("Document Type", "Document Type");
+      lrecSaleLine.SETRANGE("Document No.", "No.");
+      //START - WG083 - 23.06.2010 - MP - VAT by date
+      lrecSaleLine.SETRANGE(Type, lrecSaleLine.Type::"G/L Account", lrecSaleLine.Type::"Charge (Item)");
+      //STOP - WG083 - 23.06.2010 - MP - VAT by date
+      IF lrecSaleLine.FINDSET THEN REPEAT
+        lrecSaleLine.VALIDATE("VAT Prod. Posting Group");
+        lrecSaleLine.MODIFY;
+      UNTIL lrecSaleLine.NEXT = 0;
+    END;
+
+    PROCEDURE "--WG123--"@1220009();
+    BEGIN
+    END;
+
+    PROCEDURE AddDiscountToSalesLines@1220011(parSalesHeader@1220000 : Record 36);
+    VAR
+      locSalesLine@1220001 : Record 37;
+      locSalesLineNEW@1220003 : Record 37;
+      locLCD@1220002 : Record 84687;
+      locChargeAss@1220004 : Record 5809;
+      lExtraDisc@1220006 : Decimal;
+      lcuSalPriceCalcMgt@1220005 : Codeunit 7000;
+      locSalesLineExt@1220007 : Record 84941;
+    BEGIN
+      locSalesLine.RESET;
+      locSalesLine.SETRANGE("Document Type",parSalesHeader."Document Type");
+      locSalesLine.SETRANGE("Document No.",parSalesHeader."No.");
+      locSalesLine.SETRANGE(Type,locSalesLine.Type::Item);
+      locSalesLine.SETRANGE("Totem Price", 0); //WG149 KH 120213 Totem Minus
+      IF locSalesLine.FINDSET THEN REPEAT
+        //START WG164 cdlkh 1.4.2015
+        locSalesLineExt.GET(locSalesLine."Document Type", locSalesLine."Document No.", locSalesLine."Line No.");
+        IF NOT locSalesLineExt."Uses Pricing Module" THEN BEGIN
+        //STOP WG164 cdlkh 1.4.2015
+          //check discount
+          IF locSalesLine."TT Date" <> 0D THEN BEGIN
+            locLCD.RESET;
+            locLCD.SETRANGE("Location Code",locSalesLine."Location Code");
+            locLCD.SETRANGE("Discount Currency",parSalesHeader."Currency Code");
+            locLCD.SETRANGE("Item No.",locSalesLine."No.");
+            locLCD.SETFILTER("Item Charge No.",'<>%1','');
+            locLCD.SETFILTER("Discount Amount",'<>%1',0);
+            locLCD.SETFILTER("Duration from",'<=%1',locSalesLine."TT Date");
+            locLCD.SETFILTER("Duration to",'>=%1|=%2',locSalesLine."TT Date",0D);
+            IF locLCD.FINDLAST THEN BEGIN
+              //discount exist
+
+              //START - WG - 17.02.2014 - MP - mant 6370
+              // === check not exist EXTRA discount ===
+              lExtraDisc := lcuSalPriceCalcMgt.GetExtraPrice(parSalesHeader."Sell-to Customer No.", locSalesLine."No.",
+                locSalesLine."Sales Source Code", locSalesLine."TT Date", locSalesLine."Location Code");
+              IF lExtraDisc = 0 THEN BEGIN
+              //STOP - WG - 17.02.2014 - MP - mant 6370
+                //create new sales line
+                locSalesLineNEW.INIT;
+                locSalesLineNEW."Document Type" := locSalesLine."Document Type";
+                locSalesLineNEW."Document No."  := locSalesLine."Document No.";
+                locSalesLineNEW."Line No."      := locSalesLine."Line No." + 26;
+                IF locSalesLineNEW.INSERT THEN;
+                locSalesLineNEW.VALIDATE(Type,locSalesLineNEW.Type::"Charge (Item)");
+                locSalesLineNEW.VALIDATE("No.",locLCD."Item Charge No.");
+                locSalesLineNEW."TT Date" := locSalesLine."TT Date";
+                locSalesLineNEW.VALIDATE("Gen. Prod. Posting Group",locSalesLine."Gen. Prod. Posting Group");
+                locSalesLineNEW.VALIDATE("VAT Prod. Posting Group",locSalesLine."VAT Prod. Posting Group");
+                locSalesLineNEW.VALIDATE("Location Code",locSalesLine."Location Code");
+                locSalesLineNEW.VALIDATE(Quantity,locSalesLine.Quantity);
+                locSalesLineNEW.VALIDATE("Unit Price",-locLCD."Discount Amount");
+                locSalesLineNEW.VALIDATE("Unit of Measure Code",locSalesLine."Unit of Measure Code");
+                //START - WG - 26.09.2011 - RCH - M1656 -  AddDiscountToSalesLines modify
+                locSalesLineNEW."Product Code" := locSalesLine."Product Code";
+                //STOP - WG - 26.09.2011 - RCH - M1656 -  AddDiscountToSalesLines modify
+                //+WG - 30.12.2015 - SS - NAV-15171
+                locSalesLineNEW."TT Date" := locSalesLine."TT Date";
+                locSalesLineNEW."TT Time" := locSalesLine."TT Time";
+                locSalesLineNEW."Licence Plate" := locSalesLine."Licence Plate";
+                locSalesLineNEW."Card No." := locSalesLine."Card No.";
+                //-WG - 30.12.2015 - SS - NAV-15171
+
+                locSalesLineNEW.MODIFY;
+        //START WAG - 03.10.2014 - JV - J10015
+                locSalesLineNEW.InsertSalesLineEXT;
+        //STOP WAG - 03.10.2014 - JV - J10015
+
+                // 24.10.2011 - zero lines
+                //
+                IF locSalesLineNEW."Line Amount" = 0 THEN BEGIN
+                  locSalesLineNEW.DELETE;
+        //START WAG - 03.10.2014 - JV - J10015
+                  locSalesLineNEW.DeleteSalesLineEXT;
+        //STOP WAG - 03.10.2014 - JV - J10015
+                END ELSE BEGIN
+                  //create charge linking
+                  locChargeAss.INIT;
+                  locChargeAss."Document Type"            := locSalesLineNEW."Document Type";
+                  locChargeAss."Document No."             := locSalesLineNEW."Document No.";
+                  locChargeAss."Document Line No."        := locSalesLineNEW."Line No.";
+                  locChargeAss."Line No."                 := 9999;
+                  locChargeAss."Item Charge No."          := locLCD."Item Charge No.";
+                  locChargeAss."Item No."                 := locLCD."Item No.";
+                  locChargeAss.Description                := locSalesLineNEW.Description;
+                  locChargeAss."Applies-to Doc. Type"     := locSalesLine."Document Type";
+                  locChargeAss."Applies-to Doc. No."      := locSalesLine."Document No.";
+                  locChargeAss."Applies-to Doc. Line No." := locSalesLine."Line No.";
+                  locChargeAss."Unit Cost"                := locSalesLineNEW."Unit Price";
+                  locChargeAss.VALIDATE("Qty. to Assign",locSalesLineNEW.Quantity);
+                  locChargeAss.VALIDATE("Amount to Assign",locSalesLineNEW."Line Amount");
+                  IF NOT locChargeAss.INSERT THEN
+                    locChargeAss.MODIFY;
+                END;
+              //START - WG - 17.02.2014 - MP - mant 6370
+              END;
+              //STOP - WG - 17.02.2014 - MP - mant 6370
+            END;
+          END;
+        //START WG164 cdlkh 1.4.2015
+        END;
+        //STOP WG164 cdlkh 1.4.2015
+      UNTIL(locSalesLine.NEXT=0);
+    END;
+
+    PROCEDURE AddPromoDiscountToSalesLines@1220014(parSalesHeader@1220000 : Record 36);
+    VAR
+      locSalesLine@1220001 : Record 37;
+      locSalesLineXXX@1220005 : Record 37;
+      locSalesLineNEW@1220003 : Record 37;
+      locPromoDiscount@1220006 : Decimal;
+      lrecEWPD@1220007 : Record 84748;
+      lrecSalesSetup@1220004 : Record 311;
+      locChargeAss@1220002 : Record 5809;
+      locSalesLineEXT@1220008 : Record 84941;
+    BEGIN
+
+      //WG - 12.04.2012 - RCH - M3349 - EW Promo Discount
+
+      locSalesLine.RESET;
+      locSalesLine.SETRANGE("Document Type",parSalesHeader."Document Type");
+      locSalesLine.SETRANGE("Document No.",parSalesHeader."No.");
+      locSalesLine.SETRANGE(Type,locSalesLine.Type::Item);
+      locSalesLine.SETRANGE("Totem Price", 0); //WG149 KH 120213 Totem Minus
+      // locSalesLine.SETFILTER("Qty. to Ship",'<>%1',0);  //??? - bývá dodáno...
+      IF locSalesLine.FINDSET THEN REPEAT
+        //START WG164 cdlkh 1.4.2015
+        locSalesLineEXT.GET(locSalesLine."Document Type", locSalesLine."Document No.", locSalesLine."Line No.");
+        IF NOT locSalesLineEXT."Uses Pricing Module" THEN BEGIN
+        //STOP WG164 cdlkh 1.4.2015
+          //check discount
+          locSalesLineXXX := locSalesLine;
+          locSalesLineXXX.VALIDATE(Quantity,locSalesLineXXX.Quantity);
+          locPromoDiscount := lrecEWPD.ONE_GetPromoDiscount(locSalesLineXXX."Sell-to Customer No.",
+                                                            parSalesHeader."Currency Code",
+                                                            locSalesLineXXX."TT Date",
+                                                            parSalesHeader."Sell-to Country Code",
+                                                            locSalesLineXXX."No.");
+
+          //discount exist
+          IF locPromoDiscount <> 0 THEN BEGIN
+             lrecSalesSetup.GET;
+             lrecSalesSetup.TESTFIELD("ONE Promo Disc Item Charge No.");
+
+             //change original Line
+             locSalesLine.VALIDATE("Unit Price",locSalesLineXXX."Unit Price" - locPromoDiscount);
+             locSalesLine.MODIFY;
+
+             //create new sales line
+             locSalesLineNEW.INIT;
+             locSalesLineNEW."Document Type" := locSalesLine."Document Type";
+             locSalesLineNEW."Document No."  := locSalesLine."Document No.";
+             locSalesLineNEW."Line No."      := locSalesLine."Line No." + 27;
+             IF locSalesLineNEW.INSERT THEN;
+             locSalesLineNEW.VALIDATE(Type,locSalesLineNEW.Type::"Charge (Item)");
+             locSalesLineNEW.VALIDATE("No.",lrecSalesSetup."ONE Promo Disc Item Charge No.");
+             locSalesLineNEW."TT Date" := locSalesLine."TT Date";
+             locSalesLineNEW.VALIDATE("Gen. Prod. Posting Group",locSalesLine."Gen. Prod. Posting Group");
+             locSalesLineNEW.VALIDATE("VAT Prod. Posting Group",locSalesLine."VAT Prod. Posting Group");
+             locSalesLineNEW.VALIDATE("Location Code",locSalesLine."Location Code");
+             locSalesLineNEW.VALIDATE(Quantity,locSalesLine.Quantity);
+             locSalesLineNEW.VALIDATE("Unit Price",locPromoDiscount);
+             locSalesLineNEW.VALIDATE("Unit of Measure Code",locSalesLine."Unit of Measure Code");
+             locSalesLineNEW."Product Code" := locSalesLine."Product Code";
+             //+WG - 30.12.2015 - SS - NAV-15171
+             locSalesLineNEW."TT Date" := locSalesLine."TT Date";
+             locSalesLineNEW."TT Time" := locSalesLine."TT Time";
+             locSalesLineNEW."Licence Plate" := locSalesLine."Licence Plate";
+             locSalesLineNEW."Card No." := locSalesLine."Card No.";
+             //-WG - 30.12.2015 - SS - NAV-15171
+             locSalesLineNEW.MODIFY;
+             //START WAG - 03.10.2014 - JV - J10015
+             locSalesLineNEW.InsertSalesLineEXT;
+             //STOP WAG - 03.10.2014 - JV - J10015
+
+             IF locSalesLineNEW."Line Amount" = 0 THEN BEGIN
+                locSalesLineNEW.DELETE;
+                //START WAG - 03.10.2014 - JV - J10015
+                locSalesLineNEW.DeleteSalesLineEXT;
+               //STOP WAG - 03.10.2014 - JV - J10015
+                END
+             ELSE BEGIN
+                //create charge linking
+                locChargeAss.INIT;
+                locChargeAss."Document Type"            := locSalesLineNEW."Document Type";
+                locChargeAss."Document No."             := locSalesLineNEW."Document No.";
+                locChargeAss."Document Line No."        := locSalesLineNEW."Line No.";
+                locChargeAss."Line No."                 := 9999;
+                locChargeAss."Item Charge No."          := lrecSalesSetup."ONE Promo Disc Item Charge No.";
+                locChargeAss."Item No."                 := locSalesLineNEW."No.";
+                locChargeAss.Description                := locSalesLineNEW.Description;
+                locChargeAss."Applies-to Doc. Type"     := locSalesLine."Document Type";
+                locChargeAss."Applies-to Doc. No."      := locSalesLine."Document No.";
+                locChargeAss."Applies-to Doc. Line No." := locSalesLine."Line No.";
+                locChargeAss."Unit Cost"                := locSalesLineNEW."Unit Price";
+                locChargeAss.VALIDATE("Qty. to Assign",locSalesLineNEW.Quantity);
+                locChargeAss.VALIDATE("Amount to Assign",locSalesLineNEW."Line Amount");
+                IF NOT locChargeAss.INSERT THEN
+                   locChargeAss.MODIFY;
+                END;
+             END;
+
+            //START - WG - 19.03.2013 - RCH - M5179 - EW Promo Discount
+            //
+            // uº v cu 7000 se modifikuje cena...
+            //
+            //      //check EE discount
+            //      locSalesLineXXX := locSalesLine;
+            //      locSalesLineXXX.VALIDATE(Quantity,locSalesLineXXX.Quantity);
+            //      locPromoDiscount := lrecEWPD.EE_GetPromoDiscount(locSalesLineXXX."Sell-to Customer No.",
+            //                                                       parSalesHeader."Currency Code",
+            //                                                       locSalesLineXXX."TT Date",
+            //                                                       parSalesHeader."Sell-to Country Code",
+            //                                                       locSalesLineXXX."No.");
+            //      //discount exist
+            //      IF locPromoDiscount <> 0 THEN BEGIN
+            //         //change original Line
+            //         locSalesLine.VALIDATE("Unit Price",locSalesLineXXX."Unit Price" - ABS(locPromoDiscount));
+            //         locSalesLine.MODIFY;
+            //         END;
+            //STOP - WG - 19.03.2013 - RCH - M5179 - EW Promo Discount
+        //START WG164 cdlkh 1.4.2015
+        END;
+        //STOP WG164 cdlkh 1.4.2015
+      UNTIL(locSalesLine.NEXT=0);
+    END;
+
+    PROCEDURE AddExtraDiscountToSalesLines@1220017(inSalesHead@1220000 : Record 36);
+    VAR
+      lrecSalesSetup@1220007 : Record 311;
+      lrecCust@1220004 : Record 18;
+      lrecSaleLine@1220001 : Record 37;
+      lrecSaleLineNEW@1220003 : Record 37;
+      locExtraDiscount@1220006 : Decimal;
+      lrecChargeAss@1220002 : Record 5809;
+      lcuPriceMng@1220005 : Codeunit 7000;
+      locSalesLineExt@1220008 : Record 84941;
+    BEGIN
+      lrecCust.GET(inSalesHead."Sell-to Customer No.");
+      IF NOT lrecCust."Extra Price - New Inv. Line" THEN
+        EXIT;
+
+      lrecSaleLine.RESET;
+      lrecSaleLine.SETRANGE("Document Type", inSalesHead."Document Type");
+      lrecSaleLine.SETRANGE("Document No.", inSalesHead."No.");
+      lrecSaleLine.SETRANGE(Type, lrecSaleLine.Type::Item);
+      lrecSaleLine.SETRANGE("Totem Price", 0);
+      IF lrecSaleLine.FINDSET THEN REPEAT
+        //START WG164 cdlkh 1.4.2015
+        locSalesLineExt.GET(lrecSaleLine."Document Type", lrecSaleLine."Document No.", lrecSaleLine."Line No.");
+        IF NOT locSalesLineExt."Uses Pricing Module" THEN BEGIN
+        //STOP WG164 cdlkh 1.4.2015
+          // === check discount ===
+          locExtraDiscount := lcuPriceMng.GetExtraPrice(inSalesHead."Sell-to Customer No.", lrecSaleLine."No.",
+            lrecSaleLine."Sales Source Code", lrecSaleLine."TT Date", lrecSaleLine."Location Code");
+
+          // === discount exist ===
+          IF locExtraDiscount <> 0 THEN BEGIN
+            lrecSalesSetup.GET;
+            lrecSalesSetup.TESTFIELD("Extra Price Item Charge No.");
+
+            // === change original Line ===
+            lrecSaleLine.VALIDATE("Unit Price", lrecSaleLine."Unit Price" - locExtraDiscount);
+            lrecSaleLine.MODIFY;
+            //START WAG - 03.10.2014 - JV - J10015
+            lrecSaleLine.ModifySalesLineEXT;
+            //STOP WAG - 03.10.2014 - JV - J10015
+
+            // === create new sales line ===
+            lrecSaleLineNEW.INIT;
+            lrecSaleLineNEW."Document Type" := lrecSaleLine."Document Type";
+            lrecSaleLineNEW."Document No." := lrecSaleLine."Document No.";
+            lrecSaleLineNEW."Line No." := lrecSaleLine."Line No." + 28;
+            IF lrecSaleLineNEW.INSERT THEN;
+            lrecSaleLineNEW.VALIDATE(Type, lrecSaleLineNEW.Type::"Charge (Item)");
+            lrecSaleLineNEW.VALIDATE("No.", lrecSalesSetup."Extra Price Item Charge No.");
+            lrecSaleLineNEW."TT Date" := lrecSaleLine."TT Date";
+            lrecSaleLineNEW.VALIDATE("Gen. Prod. Posting Group", lrecSaleLine."Gen. Prod. Posting Group");
+            lrecSaleLineNEW.VALIDATE("VAT Prod. Posting Group", lrecSaleLine."VAT Prod. Posting Group");
+            lrecSaleLineNEW.VALIDATE("Location Code", lrecSaleLine."Location Code");
+            lrecSaleLineNEW.VALIDATE(Quantity, lrecSaleLine.Quantity);
+            lrecSaleLineNEW.VALIDATE("Unit Price", locExtraDiscount);
+            lrecSaleLineNEW.VALIDATE("Unit of Measure Code", lrecSaleLine."Unit of Measure Code");
+            lrecSaleLineNEW."Product Code" := lrecSaleLine."Product Code";
+            //+WG - 30.12.2015 - SS - NAV-15171
+            lrecSaleLineNEW."TT Date" := lrecSaleLine."TT Date";
+            lrecSaleLineNEW."TT Time" := lrecSaleLine."TT Time";
+            lrecSaleLineNEW."Licence Plate" := lrecSaleLine."Licence Plate";
+            lrecSaleLineNEW."Card No." := lrecSaleLine."Card No.";
+            //-WG - 30.12.2015 - SS - NAV-15171
+            lrecSaleLineNEW.MODIFY;
+            //START WAG - 03.10.2014 - JV - J10015
+            lrecSaleLineNEW.InsertSalesLineEXT;
+            //STOP WAG - 03.10.2014 - JV - J10015
+
+
+            IF lrecSaleLineNEW."Line Amount" = 0 THEN BEGIN
+              lrecSaleLineNEW.DELETE;
+              //START WAG - 03.10.2014 - JV - J10015
+              lrecSaleLineNEW.DeleteSalesLineEXT;
+              //STOP WAG - 03.10.2014 - JV - J10015
+
+            END ELSE BEGIN
+              // === create charge linking ===
+              lrecChargeAss.INIT;
+              lrecChargeAss."Document Type" := lrecSaleLineNEW."Document Type";
+              lrecChargeAss."Document No." := lrecSaleLineNEW."Document No.";
+              lrecChargeAss."Document Line No." := lrecSaleLineNEW."Line No.";
+              lrecChargeAss."Line No." := 9999;
+              lrecChargeAss."Item Charge No." := lrecSalesSetup."Extra Price Item Charge No.";
+              lrecChargeAss."Item No." := lrecSaleLineNEW."No.";
+              lrecChargeAss.Description := lrecSaleLineNEW.Description;
+              lrecChargeAss."Applies-to Doc. Type" := lrecSaleLine."Document Type";
+              lrecChargeAss."Applies-to Doc. No." := lrecSaleLine."Document No.";
+              lrecChargeAss."Applies-to Doc. Line No." := lrecSaleLine."Line No.";
+              lrecChargeAss."Unit Cost" := lrecSaleLineNEW."Unit Price";
+              lrecChargeAss.VALIDATE("Qty. to Assign", lrecSaleLineNEW.Quantity);
+              lrecChargeAss.VALIDATE("Amount to Assign", lrecSaleLineNEW."Line Amount");
+              IF NOT lrecChargeAss.INSERT THEN
+                lrecChargeAss.MODIFY;
+            END;
+          END;
+        //START WG164 cdlkh 1.4.2015
+        END;
+        //STOP WG164 cdlkh 1.4.2015
+      UNTIL lrecSaleLine.NEXT = 0;
+    END;
+
+    PROCEDURE CorrectionPurchaseOrder@1220013(PurchOrderType@1220000 : 'Product,Transport';VAR PurchOrderNo@1220009 : Code[20];Delete@1220002 : Boolean) : Boolean;
+    VAR
+      "-WG128-"@1220006 : Integer;
+      locSalesLine@1220005 : Record 37;
+      locCorrection@1220004 : Boolean;
+      locVendor@1220003 : Code[20];
+      locPurchaseHeader@1220001 : Record 38;
+      locERR01@1220007 : TextConst 'CSY=Oprava nákupní objednávky PHM není moºná ²ádky obsahují více neº jednoho dodavatele nebo ƒísela nákupních objednávek PHM.';
+      locERR02@1220008 : TextConst 'CSY=Oprava nákupní objednávky dopravy není moºná ²ádky obsahují více neº jednoho dodavatele nebo ƒísela nákupních objednávek dopravy.';
+    BEGIN
+
+      //START - WG128 - MM - 30.11.11 - M2445 - POV
+      locCorrection := FALSE;
+      locSalesLine.RESET;
+      locSalesLine.SETRANGE("Document Type", "Document Type");
+      locSalesLine.SETRANGE("Document No.", "No.");
+      locSalesLine.SETRANGE(Type, locSalesLine.Type::Item);
+      locSalesLine.SETFILTER(Quantity, '<>0');
+      IF PurchOrderType=PurchOrderType::Product
+        THEN locSalesLine.SETFILTER("Purchase Order No. Product", '%1', '');
+      IF PurchOrderType=PurchOrderType::Transport
+        THEN locSalesLine.SETFILTER("Purchase Order No. Trans", '%1', '');
+
+      IF NOT locSalesLine.FINDFIRST THEN BEGIN
+
+        locCorrection := TRUE;
+
+        locSalesLine.RESET;
+        locSalesLine.SETRANGE("Document Type", "Document Type");
+        locSalesLine.SETRANGE("Document No.", "No.");
+        locSalesLine.SETRANGE(Type, locSalesLine.Type::Item);
+        locSalesLine.SETFILTER(Quantity, '<>0');
+        IF locSalesLine.FINDFIRST THEN BEGIN
+          locVendor := locSalesLine."Vendor No.";
+          IF PurchOrderType=PurchOrderType::Product
+            THEN PurchOrderNo := locSalesLine."Purchase Order No. Product";
+          IF PurchOrderType=PurchOrderType::Transport
+            THEN PurchOrderNo := locSalesLine."Purchase Order No. Trans";
+          REPEAT
+            IF locVendor<>locSalesLine."Vendor No."
+              THEN locCorrection := FALSE;
+            IF PurchOrderType=PurchOrderType::Product THEN
+             IF PurchOrderNo<>locSalesLine."Purchase Order No. Product"
+               THEN locCorrection := FALSE;
+            IF PurchOrderType=PurchOrderType::Transport THEN
+             IF PurchOrderNo<>locSalesLine."Purchase Order No. Trans"
+               THEN locCorrection := FALSE;
+          UNTIL locSalesLine.NEXT = 0;
+         END;
+
+        IF locCorrection
+         THEN BEGIN
+           IF Delete THEN
+             IF locPurchaseHeader.GET("Document Type"::Order, PurchOrderNo)
+               THEN locPurchaseHeader.DELETE(TRUE)
+               ELSE locCorrection := FALSE;
+          END
+         ELSE BEGIN
+           IF PurchOrderType=PurchOrderType::Product THEN ERROR(locERR01);
+           IF PurchOrderType=PurchOrderType::Transport THEN ERROR(locERR02);
+         END;
+
+      END;
+
+      EXIT(locCorrection);
+      //STOP - WG128 - MM - 30.11.11 - M2445 - POV
+    END;
+
+    PROCEDURE "--J10015--"@1220020();
+    BEGIN
+    END;
+
+    PROCEDURE ClearSalesHeaderEXT@1220030();
+    BEGIN
+      SalesHeaderEXTLoaded := FALSE;
+      CLEAR(SalesHeaderEXT);
+    END;
+
+    PROCEDURE GetSalesHeaderEXT@1220021();
+    BEGIN
+      //START WG - 31.10.2014 - J10015
+      //old code - DO NOT USE temporary loading of SalesHeaderExt -> GET SalesHeaderExt everytime (to avoid problems)
+      //IF SalesHeaderEXTLoaded THEN
+      //  EXIT;
+      //STOP WG - 31.10.2014 - J10015
+
+      IF NOT SalesHeaderEXT.GET("Document Type","No.") THEN
+        CreateSalesHeaderEXT;
+
+      SalesHeaderEXTLoaded := TRUE;
+    END;
+
+    PROCEDURE GetSalesHeaderEXT2@1220018(VAR parSalesHeaderEXT@1220000 : Record 84940);
+    BEGIN
+      GetSalesHeaderEXT;
+      parSalesHeaderEXT := SalesHeaderEXT;
+    END;
+
+    PROCEDURE CreateSalesHeaderEXT@1220023();
+    BEGIN
+      CLEAR(SalesHeaderEXT);
+      IF SalesHeaderEXT.GET("Document Type","No.") THEN BEGIN
+        SalesHeaderEXTLoaded := TRUE;
+      END ELSE BEGIN
+        SalesHeaderEXT.INIT;
+        SalesHeaderEXT."Document Type" := "Document Type";
+        SalesHeaderEXT."No." := "No.";
+        SalesHeaderEXT.INSERT(TRUE);
+      END;
+    END;
+
+    PROCEDURE ModifySalesHeaderEXT@1220028();
+    BEGIN
+      //START WG - 31.10.2014 - J10015
+      //old code - DO NOT USE temporary loading of SalesHeaderExt -> GET SalesHeaderExt everytime (to avoid problems)
+      //IF SalesHeaderEXTLoaded THEN
+      //  SalesHeaderEXT.MODIFY(TRUE);
+      //cz comment:pokud není primární klíƒ shodný, promÏnná SalesHeaderExt nebyla pro tuto hlaviƒku naƒtena a proto není t²eba modifikace
+      IF ("Document Type" = SalesHeaderEXT."Document Type") AND
+         ("No." = SalesHeaderEXT."No.") THEN
+        SalesHeaderEXT.MODIFY(TRUE);
+      //STOP WG - 31.10.2014 - J10015
+    END;
+
+    PROCEDURE DeleteSalesHeaderEXT@1220033();
+    BEGIN
+      GetSalesHeaderEXT;
+      SalesHeaderEXT.DELETE(TRUE);
+    END;
+
+    PROCEDURE VATCurrRateTypeOnValidate@1220025(parValue@1220000 : 'Cross rate,Calc. Currency rate,Manual');
+    VAR
+      SalesHeaderEXTOld@1220001 : Record 84940;
+    BEGIN
+      GetSalesHeaderEXT;
+      //START WAG - 26.02.2015 - JV - J10015
+      IF (SalesHeaderEXT."VAT Currency Rate Type"=SalesHeaderEXT."VAT Currency Rate Type"::Manual) AND
+         (parValue <> parValue::Manual) THEN BEGIN
+        ClearEXTLineAmounts;
+        IF NOT HideValidationDialog THEN
+          MESSAGE(Text50022);
+      END;
+      SalesHeaderEXTOld := SalesHeaderEXT;
+      //STOP WAG - 26.02.2015 - JV - J10015
+
+      SalesHeaderEXT."VAT Currency Rate Type" := parValue;
+      IF SalesHeaderEXT."VAT Currency Rate Type" <> SalesHeaderEXT."VAT Currency Rate Type"::"Calc. Currency rate" THEN
+        SalesHeaderEXT.VALIDATE("VAT Calc. Currency Code",'');
+
+      IF SalesHeaderEXT."VAT Currency Rate Type" =  SalesHeaderEXT."VAT Currency Rate Type"::"Cross rate" THEN
+        ConfirmUpdateVATCurrencyFactor;
+
+      ModifySalesHeaderEXT;
+
+      //START WAG - 26.02.2015 - JV - J10015
+      IF (SalesHeaderEXTOld."VAT Currency Rate Type" <> SalesHeaderEXTOld."VAT Currency Rate Type"::Manual) AND
+         (parValue = parValue::Manual) THEN BEGIN
+        SetEXTLineAmounts;
+        IF NOT HideValidationDialog THEN
+          MESSAGE(Text50023);
+      END;
+      //STOP WAG - 26.02.2015 - JV - J10015
+    END;
+
+    PROCEDURE VATCurrCodeOnValidate@1220019(parCode@1220000 : Code[20]);
+    BEGIN
+      GetSalesHeaderEXT;
+      SalesHeaderEXT."VAT Currency Code" := parCode;
+
+      IF SalesHeaderEXT."VAT Currency Code" <> '' THEN BEGIN
+        ConfirmUpdateVATCurrencyFactor;
+        UpdateVATCurrencyFactor;
+      END;
+
+      ModifySalesHeaderEXT;
+    END;
+
+    PROCEDURE VATCurrCodeOnLookup@1220022();
+    VAR
+      lCurrency@1220000 : Record 4;
+    BEGIN
+      GetSalesHeaderEXT;
+      IF NOT lCurrency.GET(SalesHeaderEXT."VAT Currency Code") THEN;
+      IF FORM.RUNMODAL(0,lCurrency) = ACTION::LookupOK THEN; //field is not editable
+    END;
+
+    PROCEDURE VATCurrCodeOnAssistEdit@1220024() : Boolean;
+    VAR
+      ChangeExchangeRate@1220000 : Form 511;
+    BEGIN
+      GetSalesHeaderEXT;
+      CLEAR(ChangeExchangeRate);
+      IF SalesHeaderEXT."VAT Currency Factor" = 0 THEN
+        SalesHeaderEXT."VAT Currency Factor" := 1;
+      ChangeExchangeRate.SetParameter(SalesHeaderEXT."VAT Currency Code",SalesHeaderEXT."VAT Currency Factor","VAT Taxation Date");
+      ChangeExchangeRate.SetUseCrossRate(TRUE);
+      ChangeExchangeRate.SetParametersVAT("Currency Code");
+
+      IF ChangeExchangeRate.RUNMODAL = ACTION::OK THEN BEGIN
+        SalesHeaderEXT.TESTFIELD("VAT Currency Rate Type",SalesHeaderEXT."VAT Currency Rate Type"::Manual);
+        SalesHeaderEXT.VALIDATE("VAT Currency Factor",ChangeExchangeRate.GetParameter);
+        SalesHeaderEXT.MODIFY;
+        EXIT(TRUE);
+      END ELSE
+        EXIT(FALSE);
+      CLEAR(ChangeExchangeRate);
+    END;
+
+    PROCEDURE VATCalcCurrCodeOnValidate@1220027(parCode@1220000 : Code[20]);
+    BEGIN
+      GetSalesHeaderEXT;
+      SalesHeaderEXT.TESTFIELD("VAT Currency Rate Type",SalesHeaderEXT."VAT Currency Rate Type"::"Calc. Currency rate");
+      SalesHeaderEXT.VALIDATE("VAT Calc. Currency Code",parCode);
+      ConfirmUpdateVATCurrencyFactor;
+      ModifySalesHeaderEXT;
+    END;
+
+    PROCEDURE VATCalcCurrCodeOnLookup@1220026();
+    VAR
+      lCurrency@1220000 : Record 4;
+    BEGIN
+      GetSalesHeaderEXT;
+      IF NOT lCurrency.GET(SalesHeaderEXT."VAT Calc. Currency Code") THEN;
+      IF FORM.RUNMODAL(0,lCurrency) = ACTION::LookupOK THEN
+        VATCalcCurrCodeOnValidate(lCurrency.Code);
+    END;
+
+    PROCEDURE UpdateVATCurrencyFactor@1100201004();
+    BEGIN
+      IF SalesHeaderEXT."VAT Currency Rate Type" = SalesHeaderEXT."VAT Currency Rate Type"::Manual THEN
+        EXIT;
+
+      IF ("VAT Taxation Date" = 0D) THEN
+        EXIT;
+
+      IF SalesHeaderEXT."VAT Currency Code" <> '' THEN BEGIN
+        IF ("Document Type" IN ["Document Type"::Quote,"Document Type"::"Blanket Order"]) AND
+           ("VAT Taxation Date" = 0D)
+        THEN
+          CurrencyDate := WORKDATE
+        ELSE
+          CurrencyDate := "VAT Taxation Date";
+        CASE SalesHeaderEXT."VAT Currency Rate Type" OF
+          SalesHeaderEXT."VAT Currency Rate Type"::"Cross rate":
+            BEGIN
+              SalesHeaderEXT.VALIDATE("VAT Currency Factor",1/VATCurrMgt.GetVATRate(
+                                                               "VAT Settlement Country Code",
+                                                               "Currency Code",
+                                                               SalesHeaderEXT."VAT Currency Code",
+      //START WAG - 16.10.2014 - JV - J10015
+      //old code:
+      //                                                         "Document Date",
+      //                                                         "VAT Taxation Date"));
+                                                               "VAT Taxation Date",
+                                                               "Document Date"));
+      //STOP WAG - 16.10.2014 - JV - J10015
+            END;
+          SalesHeaderEXT."VAT Currency Rate Type"::"Calc. Currency rate":
+            BEGIN
+              SalesHeaderEXT.VALIDATE("VAT Currency Factor",
+                                      CurrExchRate.ExchangeRate(CurrencyDate,SalesHeaderEXT."VAT Calc. Currency Code"));
+            END;
+        END; //case
+      END ELSE
+        SalesHeaderEXT."VAT Currency Factor" := 1;
+      ModifySalesHeaderEXT;
+    END;
+
+    PROCEDURE ConfirmUpdateVATCurrencyFactor@1100201003();
+    BEGIN
+      IF SalesHeaderEXT."VAT Currency Rate Type" = SalesHeaderEXT."VAT Currency Rate Type"::Manual THEN
+        EXIT;
+      IF NOT GUIALLOWED THEN
+        HideValidationDialog := TRUE;
+
+      IF HideValidationDialog THEN
+        Confirmed := TRUE
+      ELSE
+        //WG - 25.085.2017 - RAKU - NAV-22520 - begin
+        //Confirmed := CONFIRM(Text50021,FALSE);
+        Confirmed := TRUE;
+        //WG - 25.085.2017 - RAKU - NAV-22520 - end
+      IF Confirmed THEN
+        UpdateVATCurrencyFactor;
+    END;
+
+    PROCEDURE GetVATCurrencyFactor@1220038() : Decimal;
+    VAR
+      locPrecision@1220000 : Decimal;
+    BEGIN
+      IF SalesHeaderEXT."VAT Currency Rate Type" = SalesHeaderEXT."VAT Currency Rate Type"::Manual THEN
+        EXIT;
+
+      IF ("VAT Taxation Date" = 0D) THEN
+        EXIT;
+
+      IF SalesHeaderEXT."VAT Currency Code" <> '' THEN BEGIN
+        locPrecision := 0.000000000000001;
+        IF ("Document Type" IN ["Document Type"::Quote,"Document Type"::"Blanket Order"]) AND
+           ("VAT Taxation Date" = 0D) THEN
+          CurrencyDate := WORKDATE
+        ELSE
+          CurrencyDate := "VAT Taxation Date";
+
+        CASE SalesHeaderEXT."VAT Currency Rate Type" OF
+          SalesHeaderEXT."VAT Currency Rate Type"::"Cross rate" : BEGIN
+            EXIT(ROUND(1/VATCurrMgt.GetVATRate("VAT Settlement Country Code", "Currency Code", SalesHeaderEXT."VAT Currency Code",
+              "VAT Taxation Date", "Document Date"), locPrecision));
+          END;
+          SalesHeaderEXT."VAT Currency Rate Type"::"Calc. Currency rate" : BEGIN
+            EXIT(ROUND(CurrExchRate.ExchangeRate(CurrencyDate,SalesHeaderEXT."VAT Calc. Currency Code"), locPrecision));
+          END;
+        END;
+      END ELSE
+        EXIT(1);
+    END;
+
+    PROCEDURE ClearEXTLineAmounts@1220031();
+    VAR
+      SalesLineEXT@1220000 : Record 84941;
+      SalesLine@1220001 : Record 37;
+    BEGIN
+      SalesLine.RESET;
+      SalesLine.SETRANGE("Document Type","Document Type");
+      SalesLine.SETRANGE("Document No.","No.");
+      IF NOT SalesLine.ISEMPTY THEN BEGIN
+        SalesLine.MODIFYALL("VAT Difference",0);
+        SalesLine.MODIFYALL("VAT Difference (LCY)",0);
+        SalesLine.MODIFYALL("VAT Correction",FALSE);
+      END;
+
+      SalesLineEXT.RESET;
+      SalesLineEXT.SETRANGE("Document Type","Document Type");
+      SalesLineEXT.SETRANGE("Document No.","No.");
+      IF NOT SalesLineEXT.ISEMPTY THEN BEGIN
+        SalesLineEXT.MODIFYALL("VAT Amount (Doc)",0);
+        SalesLineEXT.MODIFYALL("VAT Base Amount (Doc)",0);
+        SalesLineEXT.MODIFYALL("Amt including VAT (Doc)",0);
+        SalesLineEXT.MODIFYALL("Currency Factor (Doc)",0);
+        SalesLineEXT.MODIFYALL("Curr.VAT Amount (LCY)",0);
+        SalesLineEXT.MODIFYALL("VAT Base Amount (LCY)",0);
+        SalesLineEXT.MODIFYALL("Amt incl. VAT (LCY)",0);
+        SalesLineEXT.MODIFYALL("VAT Currency Factor",0);
+        SalesLineEXT.MODIFYALL("VAT Base Amount (VAT Currency)",0);
+        SalesLineEXT.MODIFYALL("VAT Amount (VAT Currency)",0);
+        SalesLineEXT.MODIFYALL("Amt incl. VAT (VAT Currency)",0);
+        SalesLineEXT.MODIFYALL("VAT Difference (VAT Currency)",0);
+      END;
+    END;
+
+    PROCEDURE SetEXTLineAmounts@1220029();
+    VAR
+      SalesLineEXT@1220000 : Record 84941;
+      SalesLine@1220001 : Record 37;
+    BEGIN
+      SalesLine.RESET;
+      SalesLine.SETRANGE("Document Type","Document Type");
+      SalesLine.SETRANGE("Document No.","No.");
+      IF NOT SalesLine.ISEMPTY THEN BEGIN
+        SalesLine.MODIFYALL("VAT Difference",0);
+        SalesLine.MODIFYALL("VAT Difference (LCY)",0);
+        SalesLine.MODIFYALL("VAT Correction",FALSE);
+      END;
+
+      SalesLineEXT.RESET;
+      SalesLineEXT.SETRANGE("Document Type","Document Type");
+      SalesLineEXT.SETRANGE("Document No.","No.");
+      IF NOT SalesLineEXT.ISEMPTY THEN BEGIN
+        SalesLineEXT.MODIFYALL("Currency Factor (Doc)","Currency Factor");
+        SalesLineEXT.MODIFYALL("VAT Currency Factor",SalesHeaderEXT."VAT Currency Factor");
+        SalesLineEXT.FINDSET;
+        REPEAT
+          SalesLine.GET(SalesLineEXT."Document Type",SalesLineEXT."Document No.",SalesLineEXT."Line No.");
+          SalesLineEXT.UpdateSalesEXTLines(SalesLine);
+        UNTIL SalesLineEXT.NEXT=0;
+      END;
+    END;
+
+    PROCEDURE CheckBYUARUCreditMemo@1220047(lrecSalesHeader@1220000 : Record 36);
+    VAR
+      lrecOrigSalesInvoice@1220001 : Record 112;
+      lrecContact@1220002 : Record 5050;
+      TEXT0001@1220003 : TextConst 'CSY=Dobropis pro zákazníky z BY,UA nebo RU by mÏl mít stejnou ƒástku (%1) jako pàvodní doklad (%2). Pokraƒovat ?;ENU=Credit memo for customers from BY,UA or RU should have the same amount (%1) as original invoice (%2). Continue ?';
+      TEXT0002@1220004 : TextConst 'CSY=P²eruþeno uºivatelem.;ENU=User abort.';
+      lrecSalesLines@1220005 : Record 37;
+      lineAmount@1220006 : Decimal;
+      TEXT0003@1220007 : TextConst 'CSY=Nelze smazat. Dobropis pro zákazníky z BY,UA nebo RU musí mít stejnou ƒástku jako pàvodní doklad;ENU=Credit memo for customers from BY,UA or RU must have the same amount as original invoice.';
+    BEGIN
+      IF NOT GUIALLOWED THEN
+        EXIT;
+      //IF lrecSalesHeader.Geschaftsbereich = 'KARTY' THEN
+      //  EXIT;
+      IF lrecOrigSalesInvoice.GET(lrecSalesHeader."Orig.TAX Document No.") THEN BEGIN
+        IF lrecContact.GET(lrecOrigSalesInvoice."Sell-to Customer No.") THEN BEGIN
+          IF lrecContact."Country Code" IN ['BY','UA','RU'] THEN BEGIN
+            //lrecSalesHeader.CALCFIELDS(lrecSalesHeader.Amount);
+            IF NOT isNAKL(lrecSalesHeader."Orig.TAX Document No.") THEN
+              ERROR(TEXT0003);
+            {
+            lrecOrigSalesInvoice.CALCFIELDS(lrecOrigSalesInvoice.Amount);
+            lrecSalesLines.SETRANGE(lrecSalesLines."Document Type",lrecSalesHeader."Document Type");
+            lrecSalesLines.SETRANGE(lrecSalesLines."Document No.",lrecSalesHeader."No.");
+            lineAmount := 0;
+            IF lrecSalesLines.FINDSET THEN BEGIN
+              REPEAT
+navsrctest/COD5615.txt
+ DefaultDim.FINDFIRST  THEN
+          REPEAT
+ FAAllocDim.FINDFIRST THEN
+        REPEAT
+ GLBudgetDim2.FINDFIRST THEN
+        REPEAT
+ FINDFIRST THEN REPEAT
+ locRec.FINDFIRST THEN// this is comment
+        REPEAT
+53

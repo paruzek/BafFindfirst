@@ -16,8 +16,8 @@ OBJECT Codeunit 5615 Budget Depreciation
   CODE
   {
     VAR
-      Text000@1000 : TextConst 'CSY=V sestavØ rozpoŸtu, %1 mus¡ bìt %2 v %3.;ENU=In a budget report, %1 must be %2 in %3.;SKY=V zostave rozpoŸtu, %1 mus¡ byœ %2 v %3.';
-      Text001@1001 : TextConst 'CSY=Nebyl proveden vìpoŸet rozpoŸtu pro dlouhodobì majetek s %1 %2, %3 nebo %4.;ENU=Budget calculation has not been done on fixed assets with %1 %2, %3 or %4.;SKY=Nebol vykonanì vìpoŸet rozpoŸtu pre investiŸnì majetok s %1 %2, %3 alebo %4.';
+      Text000@1000 : TextConst 'CSY=V sestavï¿½ rozpoï¿½tu, %1 musï¿½ bï¿½t %2 v %3.;ENU=In a budget report, %1 must be %2 in %3.;SKY=V zostave rozpoï¿½tu, %1 musï¿½ byï¿½ %2 v %3.';
+      Text001@1001 : TextConst 'CSY=Nebyl proveden vï¿½poï¿½et rozpoï¿½tu pro dlouhodobï¿½ majetek s %1 %2, %3 nebo %4.;ENU=Budget calculation has not been done on fixed assets with %1 %2, %3 or %4.;SKY=Nebol vykonanï¿½ vï¿½poï¿½et rozpoï¿½tu pre investiï¿½nï¿½ majetok s %1 %2, %3 alebo %4.';
       NoOfErrors@1002 : Integer;
       CallNo@1003 : Integer;
 
@@ -205,6 +205,12 @@ OBJECT Codeunit 5615 Budget Depreciation
     END;
 
     BEGIN
+      FINDFIRST THEN REPEAT
+
+
+      locRec.FINDFIRST THEN// this is comment
+        REPEAT
+
     END.
   }
 }
