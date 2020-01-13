@@ -14,15 +14,15 @@ def rules(filename):
 
 def main(directory="navsrc", rules_file="findfirst_rule.txt"):
     i = 0
-    for filename in os.listdir(directory):
-        print(filename)  
-        ifile = open(os.path.join(directory,filename), "r", encoding="cp850")
-        itext = ifile.read()
-        ifile.close
-        for matches_rule in rules(rules_file):
-            for match in  matches_rule(itext):
-                print(match.group(1))
-                i += 1
+    for r, d, f in os.walk(directory):
+        for filename in f: 
+            ifile = open(os.path.join(r,filename), "r", encoding="cp850")
+            itext = ifile.read()
+            ifile.close
+            for matches_rule in rules(rules_file):
+                for match in  matches_rule(itext):
+                    print(match.group(1))
+                    i += 1
     print(i)
 
 main()
