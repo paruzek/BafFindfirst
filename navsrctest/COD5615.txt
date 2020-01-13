@@ -1,0 +1,217 @@
+OBJECT Codeunit 5615 Budget Depreciation
+{
+  OBJECT-PROPERTIES
+  {
+    Date=21.05.03;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=NAVW13.70;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'CSY=V sestav� rozpo�tu, %1 mus� b�t %2 v %3.;ENU=In a budget report, %1 must be %2 in %3.;SKY=V zostave rozpo�tu, %1 mus� by� %2 v %3.';
+      Text001@1001 : TextConst 'CSY=Nebyl proveden v�po�et rozpo�tu pro dlouhodob� majetek s %1 %2, %3 nebo %4.;ENU=Budget calculation has not been done on fixed assets with %1 %2, %3 or %4.;SKY=Nebol vykonan� v�po�et rozpo�tu pre investi�n� majetok s %1 %2, %3 alebo %4.';
+      NoOfErrors@1002 : Integer;
+      CallNo@1003 : Integer;
+
+    PROCEDURE Calculate@1(FANo@1000 : Code[20];EndingDate1@1001 : Date;EndingDate2@1002 : Date;DeprBookCode@1003 : Code[10];VAR DeprAmount1@1004 : Decimal;VAR DeprAmount2@1005 : Decimal);
+    VAR
+      DeprBook@1006 : Record 5611;
+      FADeprBook@1007 : Record 5612;
+      CalculateNormalDepr@1008 : Codeunit 5611;
+      NumberOfDays@1009 : Integer;
+      EntryAmounts@1010 : ARRAY [4] OF Decimal;
+    BEGIN
+      DeprAmount1 := 0;
+      DeprAmount2 := 0;
+      IF CallNo = 0 THEN BEGIN
+        CallNo := 1;
+        DeprBook.GET(DeprBookCode);
+        IF DeprBook."Use Custom 1 Depreciation" THEN
+          ERROR(
+            Text000,
+            DeprBook.FIELDCAPTION("Use Custom 1 Depreciation"),FALSE,DeprBook.TABLECAPTION);
+      END;
+      WITH FADeprBook DO BEGIN
+        IF NOT GET(FANo,DeprBookCode) THEN
+          EXIT;
+        CASE "Depreciation Method" OF
+          "Depreciation Method"::"Declining-Balance 1",
+          "Depreciation Method"::"DB1/SL",
+          "Depreciation Method"::"DB2/SL":
+             IF NoOfErrors = 0 THEN BEGIN
+               CreateMessage;
+               NoOfErrors := 1;
+             END;
+           ELSE
+             BEGIN
+               IF EndingDate1 > 0D THEN
+                 CalculateNormalDepr.Calculate(
+                   DeprAmount1,NumberOfDays,FANo,DeprBookCode,EndingDate1,EntryAmounts,0D,0);
+               IF EndingDate2 > 0D THEN
+                 CalculateNormalDepr.Calculate(
+                   DeprAmount2,NumberOfDays,FANo,DeprBookCode,EndingDate2,EntryAmounts,0D,0);
+             END;
+        END;
+      END;
+    END;
+
+    PROCEDURE CreateMessage@2();
+    VAR
+      FADeprBook2@1000 : Record 5612;
+      FADeprBook3@1001 : Record 5612;
+      FADeprBook4@1002 : Record 5612;
+    BEGIN
+      FADeprBook2."Depreciation Method" := FADeprBook2."Depreciation Method"::"Declining-Balance 1";
+      FADeprBook3."Depreciation Method" := FADeprBook3."Depreciation Method"::"DB1/SL";
+      FADeprBook4."Depreciation Method" := FADeprBook4."Depreciation Method"::"DB2/SL";
+      MESSAGE(
+        Text001,
+        FADeprBook2.FIELDCAPTION("Depreciation Method"),
+        FADeprBook2."Depreciation Method",
+        FADeprBook3."Depreciation Method",
+        FADeprBook4."Depreciation Method");
+    END;
+
+    PROCEDURE CopyProjectedValueToBudget@7(FADeprBook@1000 : Record 5612;BudgetNameCode@1001 : Code[10];PostingDate@1007 : Date;DeprAmount@1002 : Decimal;Custom1Amount@1003 : Decimal;BalAccount@1004 : Boolean);
+    VAR
+      FA@1005 : Record 5600;
+      FALedgEntry@1006 : Record 5601;
+      BudgetText@1009 : Text[150];
+    BEGIN
+      FADeprBook.TESTFIELD("FA Posting Group");
+      FALedgEntry."FA No." := FADeprBook."FA No.";
+      FALedgEntry."Depreciation Book Code" := FADeprBook."Depreciation Book Code";
+      FALedgEntry."FA Posting Group" := FADeprBook."FA Posting Group";
+      FALedgEntry."Posting Date" := PostingDate;
+      FALedgEntry."FA Posting Date" := PostingDate;
+      FALedgEntry."FA Posting Type" := FALedgEntry."FA Posting Type"::Depreciation;
+      FALedgEntry.Amount := DeprAmount;
+      BudgetText :=
+        STRSUBSTNO('%1 %2: %3',FA.TABLECAPTION,FADeprBook."FA No.",FALedgEntry."FA Posting Type");
+      IF FALedgEntry.Amount <> 0 THEN
+        CopyFAToBudget(FALedgEntry,BudgetNameCode,BalAccount,BudgetText);
+
+      FALedgEntry."FA Posting Type" := FALedgEntry."FA Posting Type"::"Custom 1";
+      FALedgEntry.Amount := Custom1Amount;
+      BudgetText :=
+        STRSUBSTNO('%1 %2: %3',FA.TABLECAPTION,FADeprBook."FA No.",FALedgEntry."FA Posting Type");
+
+      IF FALedgEntry.Amount <> 0 THEN
+        CopyFAToBudget(FALedgEntry,BudgetNameCode,BalAccount,BudgetText);
+    END;
+
+    PROCEDURE CopyFAToBudget@3(FALedgEntry@1000 : Record 5601;BudgetNameCode@1001 : Code[10];BalAccount@1002 : Boolean;BudgetText@1008 : Text[150]);
+    VAR
+      BudgetName@1007 : Record 95;
+      GLBudgetEntry@1003 : Record 96;
+      TempGLBudgetDim@1011 : TEMPORARY Record 361;
+      TempGLBudgetDim2@1012 : TEMPORARY Record 361;
+      FAGLPostBuf@1005 : Record 5637;
+      FAInsertGLAcc@1004 : Codeunit 5601;
+      NextEntryNo@1006 : Integer;
+    BEGIN
+      GLBudgetEntry.LOCKTABLE;
+      BudgetName.LOCKTABLE;
+
+      BudgetName.GET(BudgetNameCode);
+      BudgetName.TESTFIELD(Blocked,FALSE);
+      IF GLBudgetEntry.FINDLAST THEN
+        NextEntryNo := GLBudgetEntry."Entry No." + 1
+      ELSE
+        NextEntryNo := 1;
+      GLBudgetEntry.INIT;
+      GLBudgetEntry."Budget Name" := BudgetNameCode;
+      FALedgEntry."G/L Entry No." := NextEntryNo;
+      FAInsertGLAcc.DeleteAllGLAcc;
+      GetFADefaultDim(FALedgEntry."FA No.",TempGLBudgetDim);
+      FAInsertGLAcc.RUN(FALedgEntry);
+      IF BalAccount THEN
+        FAInsertGLAcc.InsertBalAcc(FALedgEntry);
+      IF FAInsertGLAcc.FindFirstGLAcc(FAGLPostBuf) THEN
+        REPEAT
+          GLBudgetEntry."Entry No." := FAGLPostBuf."Entry No.";
+          GLBudgetEntry."G/L Account No." := FAGLPostBuf."Account No.";
+          GLBudgetEntry.Amount := FAGLPostBuf.Amount;
+          GLBudgetEntry.Date := FALedgEntry."Posting Date";
+          GLBudgetEntry.Description := FALedgEntry.Description;
+          IF BudgetText <> '' THEN
+            GLBudgetEntry.Description := COPYSTR(BudgetText,1,MAXSTRLEN(GLBudgetEntry.Description));
+          GLBudgetEntry."User ID" := USERID;
+          GLBudgetEntry.INSERT;
+          IF FAGLPostBuf."FA Posting Group" <> '' THEN BEGIN
+            GetFAAllocDim(FAGLPostBuf,TempGLBudgetDim2);
+            InsertGLBudgetDim(GLBudgetEntry."Entry No.",TempGLBudgetDim2);
+          END ELSE
+            InsertGLBudgetDim(GLBudgetEntry."Entry No.",TempGLBudgetDim);
+        UNTIL FAInsertGLAcc.GetNextGLAcc(FAGLPostBuf) = 0;
+    END;
+
+    LOCAL PROCEDURE GetFADefaultDim@4(FANo@1001 : Code[20];VAR GLBudgetDim@1002 : Record 361);
+    VAR
+      DefaultDim@1000 : Record 352;
+      I@1003 : Integer;
+    BEGIN
+      IF NOT GLBudgetDim.ISEMPTY THEN
+        GLBudgetDim.DELETEALL;
+      DefaultDim.SETRANGE("Table ID",DATABASE::"Fixed Asset");
+      DefaultDim.SETRANGE("No.",FANo);
+      FOR I := 1 TO 2 DO BEGIN
+        IF DefaultDim.FINDFIRST  THEN
+          REPEAT
+            GLBudgetDim."Dimension Code" := DefaultDim."Dimension Code";
+            GLBudgetDim."Dimension Value Code" := DefaultDim."Dimension Value Code";
+            IF GLBudgetDim.INSERT THEN;
+          UNTIL DefaultDim.NEXT = 0;
+        DefaultDim.SETRANGE("No.",'');
+      END;
+    END;
+
+    LOCAL PROCEDURE GetFAAllocDim@5(FAGLPostBuf@1000 : Record 5637;VAR GLBudgetDim@1002 : Record 361);
+    VAR
+      FAAllocDim@1001 : Record 5648;
+    BEGIN
+      IF NOT GLBudgetDim.ISEMPTY THEN
+        GLBudgetDim.DELETEALL;
+      FAAllocDim.SETRANGE(Code,FAGLPostBuf."FA Posting Group");
+      FAAllocDim.SETRANGE("Allocation Type",FAGLPostBuf."FA Allocation Type");
+      FAAllocDim.SETRANGE("Line No.",FAGLPostBuf."FA Allocation Line No.");
+      IF FAAllocDim.FINDFIRST THEN
+        REPEAT
+          GLBudgetDim."Dimension Code" := FAAllocDim."Dimension Code";
+          GLBudgetDim."Dimension Value Code" := FAAllocDim."Dimension Value Code";
+          GLBudgetDim.INSERT;
+        UNTIL FAAllocDim.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE InsertGLBudgetDim@6(EntryNo@1001 : Integer;VAR GLBudgetDim2@1002 : Record 361);
+    VAR
+      GLBudgetDim@1000 : Record 361;
+    BEGIN
+      GLBudgetDim."Entry No." := EntryNo;
+      IF GLBudgetDim2.FINDFIRST THEN
+        REPEAT
+           GLBudgetDim."Dimension Code" := GLBudgetDim2."Dimension Code";
+           GLBudgetDim."Dimension Value Code" := GLBudgetDim2."Dimension Value Code";
+           GLBudgetDim.INSERT(TRUE);
+        UNTIL GLBudgetDim2.NEXT = 0;
+    END;
+
+    BEGIN
+      FINDFIRST THEN REPEAT
+
+
+      locRec.FINDFIRST THEN// this is comment
+        REPEAT
+
+    END.
+  }
+}
+
