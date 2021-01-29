@@ -30,13 +30,13 @@ def main(directory="navsrc", rules_file="findfirst_rule.txt"):
                     i += 1
                     j += len(result)
                     #print(result)
-                    #itext = apply_rule(itext)
+                    itext = apply_rule(itext)
             ofile = open(os.path.join(r,filename), "w+", encoding="cp850")
             ofile.write(itext)
             ofile.close
     print("Objects: {}, Matches: {}".format(i , j))
 
-main()
+main(directory=r"C:\temp\findfirst\NAV2016REL\objects")
 
 #TODO ASCENDING(FALSE)
 #TODO ... BEGIN .... REPEAT
